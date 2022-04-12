@@ -21,12 +21,18 @@ public class JoinThread {
             Thread t3 = new Thread(new C());
 
             System.out.println("--> Execution Start");
+            System.out.println("---- t1 Start");
             t1.start();
             t1.join();
+            System.out.println("---- t1 End");
+            System.out.println("---- t2 Start");
             t2.start();
             t2.join();
+            System.out.println("---- t2 End");
+            System.out.println("---- t3 Start");
             t3.start();
             t3.join();
+            System.out.println("---- t3 End");
             System.out.println("--> Execution End");
         } catch (Exception e) {
             System.out.println("Exception main : " + e);
