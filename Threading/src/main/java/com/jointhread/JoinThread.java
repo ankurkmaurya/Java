@@ -24,17 +24,26 @@ public class JoinThread {
             System.out.println("---- t1 Start");
             t1.start();
             t1.join();
+            System.out.println("---- t1 isAlive " + t1.isAlive());
             System.out.println("---- t1 End");
+            
+            
             System.out.println("---- t2 Start");
             t2.start();
             t2.join();
+            System.out.println("---- t2 isAlive " + t2.isAlive());
             System.out.println("---- t2 End");
+            
+            
             System.out.println("---- t3 Start");
             t3.start();
             t3.join();
+            System.out.println("---- t3 isAlive " + t3.isAlive());
             System.out.println("---- t3 End");
+            
+            
             System.out.println("--> Execution End");
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
             System.out.println("Exception main : " + e);
         }
     }
