@@ -9,25 +9,27 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @author Ankur Maurya
  *
- * CyclicBarrier: It is a tool to synchronize threads processing using some
- * algorithm. It enables a set of threads to wait for each other till they reach
- * a common execution point or common barrier points, and then let them further
- * continue execution. One can reuse the same CyclicBarrier even if the barrier
- * is broken by setting it.
+ * <p>
+ * <b>CyclicBarrier:</b> It is a tool to synchronize threads processing using
+ * some algorithm. It enables a set of threads to wait for each other till they
+ * reach a common execution point or common barrier points, and then let them
+ * further continue execution. One can reuse the same CyclicBarrier even if the
+ * barrier is broken by setting it.</p>
  *
- * This class will print the data as
- *  0Aa
- *  1Bb
- *  2Cc
- *  3Dd
- *  4Ee
- *  5Ff
- *  6Gg
- *  7Hh
- *  8Ii
- *  9Jj
- * 
- * 
+ * <p>
+ * This class will print the data as</p>
+ * <li>0Aa</li>
+ * <li>1Bb</li>
+ * <li>2Cc</li>
+ * <li>3Dd</li>
+ * <li>4Ee</li>
+ * <li>5Ff</li>
+ * <li>6Gg</li>
+ * <li>7Hh</li>
+ * <li>8Ii</li>
+ * <li>9Jj</li>
+ *
+ *
  */
 public class CyclicBarrierSequenceThreads {
     

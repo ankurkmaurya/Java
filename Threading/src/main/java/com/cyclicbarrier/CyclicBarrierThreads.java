@@ -8,27 +8,29 @@ import java.util.concurrent.Executors;
  *
  * @author Ankur Maurya
  *
- * CyclicBarrier: It is a tool to synchronize threads processing using some
- * algorithm. It enables a set of threads to wait for each other till they reach
- * a common execution point or common barrier points, and then let them further
- * continue execution. One can reuse the same CyclicBarrier even if the barrier
- * is broken by setting it.
+ * <p>
+ * <b>CyclicBarrier:</b> It is a tool to synchronize threads processing using
+ * some algorithm. It enables a set of threads to wait for each other till they
+ * reach a common execution point or common barrier points, and then let them
+ * further continue execution. One can reuse the same CyclicBarrier even if the
+ * barrier is broken by setting it.</p>
  *
- * This class will print the data as
- *  0Aa
- *  b1B
- *  C2c
- *  dD3
- *  4eE
- *  F5f
- *  g6G
- *  Hh7
- *  8Ii
- *  j9J
- * 
- *  The data is printed in all the three thread sequence in each and every line but within the line
- *  the thread is scheduled in any order.
- * 
+ * <p>This class will print the data as</p>
+ * <li>0Aa</li>
+ * <li>b1B</li>
+ * <li>C2c</li>
+ * <li>dD3</li>
+ * <li>4eE</li>
+ * <li>F5f</li>
+ * <li>g6G</li>
+ * <li>Hh7</li>
+ * <li>8Ii</li>
+ * <li>j9J</li>
+ *
+ * <p>
+ * The data is printed in all the three thread sequence in each and every line
+ * but within the line the thread is scheduled in any order.</p>
+ *
  *
  */
 public class CyclicBarrierThreads {
