@@ -15,7 +15,8 @@ import java.util.concurrent.Executors;
  * further continue execution. One can reuse the same CyclicBarrier even if the
  * barrier is broken by setting it.</p>
  *
- * <p>This class will print the data as</p>
+ * <p>
+ * This class will print the data as</p>
  * <li>0Aa</li>
  * <li>b1B</li>
  * <li>C2c</li>
