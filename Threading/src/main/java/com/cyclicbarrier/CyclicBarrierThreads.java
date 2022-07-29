@@ -38,9 +38,7 @@ public class CyclicBarrierThreads {
 
     public static void main(String[] args) {
         try {
-            CyclicBarrier barrier = new CyclicBarrier(3, () -> {
-                System.out.println();
-            });
+            CyclicBarrier barrier = new CyclicBarrier(3, System.out::println);
 
             ExecutorService executor = Executors.newFixedThreadPool(4);
             executor.submit(new A(barrier));

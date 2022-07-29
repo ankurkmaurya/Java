@@ -1,0 +1,128 @@
+
+______________________________________________ THREAD CONCEPT SUMMARY ____________________________________________________
+
+1. We can create daemon threads in java using the thread class setDaemon(true). 
+   It is used to mark the current thread as daemon thread or user thread. 
+   isDaemon() method is generally used to check whether the current thread is daemon or not. 
+   If the thread is a daemon, it will return true otherwise it returns false.  
+   
+2. But one can only call the setDaemon() method before start() method otherwise it will definitely throw IllegalThreadStateException.
+
+3. wait(): As the name suggests, it is a non-static method that causes the current thread to wait and go to sleep until 
+   some other threads call the notify() or notifyAll() method for the object’s monitor lock. 
+   It simply releases the lock and is mostly used for inter-thread communication. 
+   It is defined in the object class, and should only be called from a synchronized context.
+    synchronized(monitor) 
+	{ 
+	   monitor.wait(); //Here Lock Is Released by Current Thread  
+	} 
+   
+4. sleep(): As the name suggests, it is a static method that pauses or stops the execution of the current thread for some specified period. 
+   It dosen’t release the lock while waiting and is mostly used to introduce pause on execution. 
+   It is defined in thread class, and no need to call from a synchronized context.
+    synchronized(monitor) 
+	{ 
+		Thread.sleep(1000);     //Here Lock Is Held by The Current Thread 
+		//after 1000 milliseconds, the current thread will wake up, or after we call that is interrupt() method 
+	} 
+    
+5. notify(): It sends a notification and wakes up only a single thread instead of multiple threads that are waiting on the object’s monitor.
+
+6. notifyAll(): It sends notifications and wakes up all threads and allows them to compete for the object's monitor instead of a single thread. 
+
+7. Running Interface: This interface is basically available in Java right from the beginning. It is simply used to execute code on a concurrent thread.  
+   It was introduced in JDK 1.0. It simply belongs to Java.lang package. It uses the run() method to define a task.
+	public interface Runnable  
+	{   
+	  public abstract void run(); 
+	}  
+	
+8. Callable Interface: This interface is basically a new one that was introduced as a part of the concurrency package. 
+   It addresses the limitation of runnable interfaces along with some major changes like generics, enum, static imports, variable argument method, etc. 
+   It uses generics to define the return type of object. 
+   It was introduced in JDK 5.0, so one cannot use it before Java 5. 
+   It simply belongs to java.util.concurrent.
+   It uses the call() method to define a task.
+    public interface Callable<V>  
+	{    
+	   V call() throws Exception;  
+	} 
+	
+9. start(): In simple words, the start() method is used to start or begin the execution of a newly created thread. 
+   When the start() method is called, a new thread is created and this newly created thread executes the task that is kept in the run() method. 
+   One can call the start() method only once.
+   
+10. run(): In simple words, the run() method is used to start or begin the execution of the same thread. 
+    When the run() method is called, no new thread is created as in the case of the start() method. 
+	This method is executed by the current thread. One can call the run() method multiple times.
+
+11. join() method is generally used to pause the execution of a current thread unless and until the specified thread on which join is called is dead or completed. 
+    To stop a thread from running until another thread gets ended, this method can be used. 
+	It joins the start of a thread execution to the end of another thread’s execution. It is considered the final method of a thread class.
+	When the join() method is invoked, the current thread stops its execution and the thread goes into the wait state. 
+	The current thread remains in the wait state until the thread on which the join() method is invoked has achieved its dead state. 
+	If interruption of the thread occurs, then it throws the InterruptedException.
+
+12. Volatile : A volatile variable is basically a keyword that is used to ensure and address the visibility of changes to variables in multithreaded programming. 
+    This keyword cannot be used with classes and methods, instead can be used with variables. It is simply used to achieve thread-safety. 
+	If you mark any variable as volatile, then all the threads can read its value directly from the main memory rather than CPU cache, 
+	so that each thread can get an updated value of the variable.
+
+13. Threads can communicate using three methods i.e. wait(), notify(), and notifyAll().
+
+14. Synchronized Method:- In this method, the thread acquires a lock on the object when they enter the synchronized method and releases 
+    the lock either normally or by throwing an exception when they leave the method.  
+    No other thread can use the whole method unless and until the current thread finishes its execution and release the lock. 
+    It can be used when one wants to lock on the entire functionality of a particular method.
+
+15. Synchronized Block: In this method, the thread acquires a lock on the object between parentheses after the synchronized keyword, 
+    and releases the lock when they leave the block. 
+    No other thread can acquire a lock on the locked object unless and until the synchronized block exists. 
+	It can be used when one wants to keep other parts of the programs accessible to other threads.
+    Synchronized blocks should be preferred more as it boosts the performance of a particular program. 
+	It only locks a certain part of the program (critical section) rather than the entire method and therefore leads to less contention.
+
+16. What is Livelock? What happens when it occurs?
+    Similar to deadlock, livelock is also another concurrency problem. 
+    In this case, the state of threads changes between one another without making any progress. 
+    Threads are not blocked but their execution is stopped due to the unavailability of resources.
+
+17. BlockingQueue basically represents a queue that is thread-safe. Producer thread inserts resource/element into the queue using put() method 
+    unless it gets full and consumer thread takes resources from the queue using take() method until it gets empty. 
+    But if a thread tries to dequeue from an empty queue, then a particular thread will be blocked until some other thread inserts an item into the queue, 
+	or if a thread tries to insert an item into a queue that is already full, then a particular thread will be blocked until 
+	some threads take away an item from the queue.
+	BlockingQueue<String> queue = new ArrayBlockingQueue<>(5); 
+
+18. Can you start a thread twice?
+    No, it's not at all possible to restart a thread once a thread gets started and completes its execution. 
+	Thread only runs once and if you try to run it for a second time, then it will throw a runtime exception i.e. java.lang.IllegalThreadStateException.
+
+19. Context switching is basically an important feature of multithreading. It is referred to as switching of CPU from one thread or process to another one. 
+    It allows multiple processes to share the same CPU. In context switching, the state of thread or process is stored so that the execution 
+    of the thread can be resumed later if required.	
+
+20. CyclicBarrier: It is a tool to synchronize threads processing using some algorithm. It enables a set of threads to wait for 
+    each other till they reach a common execution point or common barrier points, and then let them further continue execution. 
+    One can reuse the same CyclicBarrier even if the barrier is broken by setting it.
+
+21. CountDownLatch: It is a tool that enables main threads to wait until mandatory operations are performed and completed by other threads. 
+    In simple words, it makes sure that a thread waits until the execution in another thread completes before it starts its execution. 
+	One cannot reuse the same CountDownLatch once the count reaches 0.  	
+
+22. ThreadLocal variables are special kinds of variables created and provided by the Java ThreadLocal class. 
+    These variables are only allowed to be read and written by the same thread. Two threads cannot be able to see each other’s ThreadLocal variable, 
+	so even if they will execute the same code, then there won't be any race condition and the code will be thread-safe.
+
+23. Is it possible that each thread can have its stack in multithreaded programming ==> Of course, it is possible. 
+    In multithreaded programming, each thread maintains its own separate stack area in memory because of which every thread is 
+    independent of each other rather than dependent.
+	
+	
+	
+	
+
+   
+   
+   
+   

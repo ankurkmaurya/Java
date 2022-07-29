@@ -19,7 +19,7 @@ public class A implements Runnable {
         try {
             for (int i = 48; i <= (48 + 9); i++) {
                 synchronized (lock) {
-                    lock.notify();
+                	lock.notify();
                     System.out.print((char) i);
                     lock.wait();
                 }

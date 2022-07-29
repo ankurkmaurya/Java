@@ -35,9 +35,7 @@ public class CyclicBarrierSequenceThreads {
     
     public static void main(String[] args) {
         try {
-            CyclicBarrier barrier = new CyclicBarrier(3, () -> {
-                System.out.println();
-            });
+            CyclicBarrier barrier = new CyclicBarrier(3, System.out::println);
             
             AtomicInteger seq = new AtomicInteger();
             seq.set(1);
@@ -46,8 +44,7 @@ public class CyclicBarrierSequenceThreads {
             executor.submit(new A(barrier, seq));
             executor.submit(new B(barrier, seq));
             executor.submit(new C(barrier, seq));
-            executor.shutdown();    
-            
+            executor.shutdown();     
         } catch (Exception e) {
             System.out.println("Exception main : " + e);
         }

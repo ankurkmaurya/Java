@@ -21,7 +21,7 @@ public class A implements Runnable {
     @Override
     public void run() {
         try {
-            for (int i = 48; i <= (48 + 9); i++) {
+            for (int i = 48; i <= 48 + 9; i++) {
                 while (seq.get() != 1) {
                     //loop continuously  
                 }

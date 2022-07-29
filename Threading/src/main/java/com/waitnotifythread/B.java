@@ -18,7 +18,7 @@ public class B implements Runnable {
         try {
             for (int i = 65; i <= (65 + 9); i++) {
                 synchronized (lock) {
-                    lock.notify();
+                	lock.notify();
                     System.out.println((char) i);
                     lock.wait();
                 }
