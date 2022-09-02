@@ -61,7 +61,6 @@ public class StreamTestB {
 	    		if(i%2==0) {
 	    			isPrime = false;
 	    			break;
-	    			
 	    		}
 	    		}
 	    	return isPrime;
