@@ -62,6 +62,8 @@ public class StreamTestA {
        System.out.println(" ");
        ex18(); //Exercise 18 — Get the most expensive product by category
        System.out.println(" ");
+       ex19(); //Exercise 19 — Get the cheapest and expensive product of each order
+       System.out.println(" ");
 
    }
     
@@ -410,11 +412,44 @@ public class StreamTestA {
 		});
 	}
 	
-	
-	
-	
-	
-	
+	/*
+	   Exercise 19 — Get the cheapest and expensive product of each order
+	*/
+	public static void ex19() {
+		long startTime = System.currentTimeMillis();
+		Map<Long, Optional<Product>> eachOrderCheapestProduct = orderRepo.findAll()
+				.stream()
+				.collect(Collectors.groupingBy(Order::getId, 
+						                       Collectors.flatMapping(oe-> oe.getProducts().stream(), 
+						                    		                  Collectors.maxBy(Comparator.comparing(Product::getPrice).reversed())
+						                    		                  )
+						                       )
+						);
+		long endTime = System.currentTimeMillis();
+		System.out.println(String.format("Exercise 19I — Get the cheapest and expensive product of each order. [execution time: %1$d ms]", (endTime - startTime)));
+		System.out.println(String.format("CHEAPEST :->"));
+		eachOrderCheapestProduct.forEach((e, v) -> {
+			Product p = v.get();
+			System.out.println("Order : " + e + ", Product : " + p.getName() + ", Price : " + p.getPrice());
+		});
+		
+		long startTimeA = System.currentTimeMillis();
+		Map<Long, Optional<Product>> eachOrderExpensiveProduct = orderRepo.findAll()
+				.stream()
+				.collect(Collectors.groupingBy(Order::getId, 
+						                       Collectors.flatMapping(oe-> oe.getProducts().stream(), 
+						                    		                  Collectors.maxBy(Comparator.comparing(Product::getPrice))
+						                    		                  )
+						                       )
+						);
+		long endTimeA = System.currentTimeMillis();
+		System.out.println(String.format("Exercise 19II — Get the cheapest and expensive product of each order. [execution time: %1$d ms]", (endTimeA - startTimeA)));
+		System.out.println(String.format("EXPENSIVE :->"));
+		eachOrderExpensiveProduct.forEach((e, v) -> {
+			Product p = v.get();
+			System.out.println("Order : " + e + ", Product : " + p.getName() + ", Price : " + p.getPrice());
+		});
+	}
 	
 	
 }
