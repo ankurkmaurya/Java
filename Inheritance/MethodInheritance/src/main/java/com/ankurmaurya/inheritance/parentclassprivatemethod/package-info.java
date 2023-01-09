@@ -1,0 +1,1 @@
+package com.ankurmaurya.inheritance.parentclassprivatemethod;
