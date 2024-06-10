@@ -5,5 +5,5 @@
 /target/maven-status/
 /nbactions-release-profile.xml
 /.settings/
-*.classpath
-*.project
+/*.classpath
+/*.project
