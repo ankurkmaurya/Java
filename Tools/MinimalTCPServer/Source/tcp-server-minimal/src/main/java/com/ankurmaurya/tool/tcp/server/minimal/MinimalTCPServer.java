@@ -4,12 +4,16 @@ package com.ankurmaurya.tool.tcp.server.minimal;
 /**
  *
  * @author Ankur Maurya
+ * 
  */
+
 public class MinimalTCPServer {
 
+	
 	private static String serverName = "Brahma";
 	private static int serverPort = 9999;
 
+	
 	public static void main(String[] args) {
 		System.out.println("Default -->");
 		System.out.println("Server Name - " + serverName);
@@ -40,5 +44,6 @@ public class MinimalTCPServer {
 	}
 	
 	
-
 }
+
+

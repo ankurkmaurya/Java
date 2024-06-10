@@ -1,19 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.ankurmaurya.minimaltcpserver</groupId>
-    <artifactId>MinimalTCPServer</artifactId>
-    <version>1.0</version>
-    <packaging>jar</packaging>
+    <groupId>com.ankurmaurya.tool.tcp.server.minimal</groupId>
+    <artifactId>tcp-server-minimal</artifactId>
+    <version>0.1</version>
+    <name>MinimalTCPServer</name>
+	<description>This is a TCP Server which will be listening on 
+		         the given port</description>
+    
     
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <exec.mainClass>com.ankurmaurya.minimaltcpserver.MinimalTCPServer</exec.mainClass>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.main.class>com.ankurmaurya.tool.tcp.server.minimal.MinimalTCPServer</project.main.class>
     </properties>
     
     <build>
+		<finalName>${project.name}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -25,6 +30,7 @@
                     <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
             </plugin>
+            
             <plugin> 
                 <artifactId>maven-dependency-plugin</artifactId> 
                 <executions> 
@@ -39,6 +45,7 @@
                     </execution> 
                 </executions> 
             </plugin> 
+            
             <plugin>
                 <!-- Build an executable JAR -->
                 <groupId>org.apache.maven.plugins</groupId>
@@ -49,14 +56,18 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>com.ankurmaurya.minimaltcpserver.MinimalTCPServer</mainClass>
+                            <mainClass>${project.main.class}</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
             </plugin>
+            
         </plugins>
     </build>
     
-    
-    
 </project>
+
+
+
+
+
