@@ -1,11 +1,8 @@
-/target/
-
 /target/classes/
 /target/test-classes/
 /target/generated-sources/
 /target/maven-archiver/
 /target/maven-status/
-
 /nbactions-release-profile.xml
 /.settings
 /.classpath
