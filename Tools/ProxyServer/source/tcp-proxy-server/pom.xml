@@ -19,7 +19,7 @@
   </dependencies>
 
   <build>
-		<finalName>${project.name}</finalName>
+		<finalName>${project.name}_${project.version}</finalName>
 		<plugins>
 			<!-- Maven Compiler Plugin, Phase:Compile -->
 			<plugin>
