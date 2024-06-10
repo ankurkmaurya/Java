@@ -1,13 +1,1 @@
-/Concept/target/
-
-Tools/ProxyServer/source/tcp-proxy-server/.settings
-Tools/ProxyServer/source/tcp-proxy-server/.classpath
-
-Tools/MinimalTCPServer/Source/MinimalTCPServer/nbactions-release-profile.xml
-Tools/MinimalTCPServer/Source/MinimalTCPServer/.classpath
-Tools/MinimalTCPServer/Source/MinimalTCPServer/.project
-*.prefs
-Tools/MinimalTCPServer/Source/MinimalTCPServer/target/classes/
-Tools/MinimalTCPServer/Source/MinimalTCPServer/target/generated-sources/
-Tools/MinimalTCPServer/Source/MinimalTCPServer/target/maven-archiver/
-Tools/MinimalTCPServer/Source/MinimalTCPServer/target/maven-status/
+/target/
