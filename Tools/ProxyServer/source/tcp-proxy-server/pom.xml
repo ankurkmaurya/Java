@@ -1,0 +1,115 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.eps.utility.tcp.proxy.server</groupId>
+  <artifactId>tcp-proxy-server</artifactId>
+  <version>0.1</version>
+  <name>ProxyServer</name>
+  <description>This is Proxy Server which will redirect the TCP traffic coming 
+	           from specific port to configured Host and Port.</description>
+
+   <properties>
+		<jdk.source>21</jdk.source>
+		<jdk.version>21</jdk.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.main.class>com.eps.utility.tcp.proxy.server.ProxyServerMain</project.main.class>
+   </properties>
+
+  <dependencies>
+
+  </dependencies>
+
+  <build>
+		<finalName>${project.name}</finalName>
+		<plugins>
+			<!-- Maven Compiler Plugin, Phase:Compile -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
+				<configuration>
+					<source>${jdk.source}</source>
+					<target>${jdk.version}</target>
+					<encoding>${project.build.sourceEncoding}</encoding>
+				</configuration>
+			</plugin>
+			
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.6</version>
+				<executions>
+					<execution>
+						<id>copy-resources-configuration</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/distribution/configuration</outputDirectory>
+							<resources>
+								<resource>
+									<directory>configuration</directory>
+									<filtering>false</filtering>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- Maven Dependency Plugin, Phase:Package -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.6.1</version>
+				<executions>
+					<execution>
+						<id>copy-dependencies</id>
+						<?m2e ignore?>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/distribution/libs</outputDirectory>
+							<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>false</overWriteSnapshots>
+							<overWriteIfNewer>true</overWriteIfNewer>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- Maven Jar Plugin, Phase:Package -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.3.0</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<classpathPrefix>libs/</classpathPrefix>
+							<mainClass>${project.main.class}</mainClass>
+						</manifest>
+					</archive>
+					<outputDirectory>${project.build.directory}/distribution</outputDirectory>
+				</configuration>
+			</plugin>
+
+			<!-- Maven Surefire Plugin, Phase:Test -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.0.0-M5</version>
+			</plugin>
+			
+		</plugins>
+	</build>
+
+</project>
+
+
+
+
+
+

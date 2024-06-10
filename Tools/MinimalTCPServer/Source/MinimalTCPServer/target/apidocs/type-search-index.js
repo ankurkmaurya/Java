@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes","url":"allclasses-index.html"},{"p":"com.ankurmaurya.minimaltcpserver","l":"MinimalTCPServer"},{"p":"com.ankurmaurya.minimaltcpserver","l":"PlainTCPClientHandler"},{"p":"com.ankurmaurya.minimaltcpserver","l":"PlainTCPServer"}]
