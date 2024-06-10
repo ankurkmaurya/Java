@@ -4,6 +4,6 @@
 /target/maven-archiver/
 /target/maven-status/
 /nbactions-release-profile.xml
-.settings
+/.settings
 .classpath
 .project
