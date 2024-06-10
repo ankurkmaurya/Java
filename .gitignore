@@ -4,9 +4,6 @@ Tools/ProxyServer/source/tcp-proxy-server/.settings
 Tools/ProxyServer/source/tcp-proxy-server/.classpath
 
 Tools/MinimalTCPServer/Source/MinimalTCPServer/nbactions-release-profile.xml
-
-
-
 Tools/MinimalTCPServer/Source/MinimalTCPServer/.classpath
 Tools/MinimalTCPServer/Source/MinimalTCPServer/.project
 *.prefs
