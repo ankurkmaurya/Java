@@ -1,5 +1,5 @@
 
-package com.eps.utility.tcp.proxy.server;
+package com.ankurmaurya.tool.tcp.proxy.server;
 
 /*
  * ForwardThread handles the TCP forwarding between a socket input stream (source)

@@ -1,5 +1,5 @@
 
-package com.eps.utility.tcp.proxy.server;
+package com.ankurmaurya.tool.tcp.proxy.server;
 
 import java.net.ServerSocket;
 import java.net.Socket;

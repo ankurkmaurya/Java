@@ -1,4 +1,4 @@
-package com.ankurmaurya.minimaltcpserver;
+package com.ankurmaurya.tool.tcp.server.minimal;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;

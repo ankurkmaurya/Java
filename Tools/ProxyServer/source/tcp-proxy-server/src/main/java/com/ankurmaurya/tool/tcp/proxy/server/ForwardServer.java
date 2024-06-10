@@ -1,5 +1,5 @@
 
-package com.eps.utility.tcp.proxy.server;
+package com.ankurmaurya.tool.tcp.proxy.server;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,6 +19,7 @@ public class ForwardServer implements Runnable {
 	private String mClientHostPort;
 	private String mServerHostPort;
 	
+	
 	public ForwardServer(int serverID, String remoteServerIP, Integer remoteServerPort, Socket mClientSocket) {
 		super();
 		this.serverID = serverID;
@@ -26,6 +27,7 @@ public class ForwardServer implements Runnable {
 		this.remoteServerPort = remoteServerPort;
 		this.mClientSocket = mClientSocket;
 	}
+	
 	
 	
 	@Override

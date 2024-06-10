@@ -1,5 +1,5 @@
 
-package com.ankurmaurya.minimaltcpserver;
+package com.ankurmaurya.tool.tcp.server.minimal;
 
 /**
  *
