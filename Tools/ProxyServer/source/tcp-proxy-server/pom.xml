@@ -11,7 +11,7 @@
 		<jdk.source>11</jdk.source>
 		<jdk.version>11</jdk.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.main.class>com.eps.utility.tcp.proxy.server.ProxyServerMain</project.main.class>
+		<project.main.class>com.ankurmaurya.tool.tcp.proxy.server.ProxyServerMain</project.main.class>
    </properties>
 
   <dependencies>
