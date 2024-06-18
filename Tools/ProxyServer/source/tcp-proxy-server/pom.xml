@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.eps.utility.tcp.proxy.server</groupId>
   <artifactId>tcp-proxy-server</artifactId>
-  <version>0.1</version>
+  <version>0.2</version>
   <name>ProxyServer</name>
   <description>This is Proxy Server which will redirect the TCP traffic coming 
 	           from specific port to configured Host and Port.</description>
