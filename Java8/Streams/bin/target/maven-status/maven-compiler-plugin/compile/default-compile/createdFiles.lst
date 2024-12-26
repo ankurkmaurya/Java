@@ -1,7 +1,0 @@
-com\streams\data\models\Order$OrderBuilder.class
-com\streams\data\repository\CustomerRepo.class
-com\streams\data\models\Product.class
-com\streams\data\models\Customer$CustomerBuilder.class
-com\streams\data\models\Customer.class
-com\streams\data\models\Order.class
-com\streams\data\models\Product$ProductBuilder.class
