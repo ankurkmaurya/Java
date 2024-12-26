@@ -1,39 +1,20 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>com.ankurmaurya.tool.tcp.server.minimal</groupId>
-    <artifactId>tcp-server-minimal</artifactId>
-    <version>0.1</version>
-    <name>MinimalTCPServer</name>
-	<description>This is a TCP Server which will be listening on 
-		         the given port</description>
-    
-    
-    <properties>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.ankurmaurya.tool.tcp.server.client.ui</groupId>
+  <artifactId>tcp-server-client-ui</artifactId>
+  <version>0.2</version>
+  <name>TCPClientUI</name>
+  <description>This is a TCP Client (UI) which will be communicating with server.</description>
+  
+  
+  <properties>
         <jdk.source>1.8</jdk.source>
 		<jdk.version>1.8</jdk.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.main.class>com.ankurmaurya.tool.tcp.server.minimal.MinimalTCPServer</project.main.class>
-    </properties>
-    
-    <dependencies>
-		<dependency>
-		    <groupId>com.jgoodies</groupId>
-		    <artifactId>jgoodies-forms</artifactId>
-		    <version>1.9.0</version>
-		</dependency>
-
-		<dependency>
-		    <groupId>com.miglayout</groupId>
-		    <artifactId>miglayout-swing</artifactId>
-		    <version>11.4.2</version>
-		</dependency>
-		
-	</dependencies>	
-    
-    
-    <build>
+        <project.main.class>com.ankurmaurya.tool.tcp.server.client.ui.TCPClient</project.main.class>
+  </properties>
+  
+  <build>
 		<finalName>${project.name}_${project.version}</finalName>
 		<plugins>
 			<!-- Maven Compiler Plugin, Phase:Compile -->
@@ -120,10 +101,6 @@
 			
 		</plugins>
 	</build>
-    
+  
+  
 </project>
-
-
-
-
-

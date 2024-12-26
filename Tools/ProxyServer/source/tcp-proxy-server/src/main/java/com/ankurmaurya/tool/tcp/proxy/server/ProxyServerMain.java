@@ -7,6 +7,16 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 
+/**
+*
+* @author Ankur Maurya
+* 
+* Usage:
+*        java -jar ProxyServerMain.jar 8080,192.168.75.01,9090 1234,192.168.75.23,8080 
+* 
+* 
+*/
+
 public class ProxyServerMain {
 
 	private static Map<Integer, RemoteServer>  proxyRouteMap = new HashMap<>();	
@@ -84,7 +94,7 @@ public class ProxyServerMain {
 		}		
 	}
 	
-   
+    
 	public static void startProxyServers() {
 		try {
 			int serverID = 1;
