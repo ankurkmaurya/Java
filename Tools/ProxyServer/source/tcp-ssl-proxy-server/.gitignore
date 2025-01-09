@@ -1,0 +1,5 @@
+/bin/
+/nbactions-release-profile.xml
+/.settings
+/.classpath
+/target/
