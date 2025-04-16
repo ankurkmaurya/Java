@@ -1,4 +1,4 @@
-package com.ankurmaurya.tool.tcp.server.minimal;
+package com.ankurmaurya.tool.tcp.server.minimal.producerconsumer;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -11,12 +11,12 @@ import java.net.Socket;
  * @author Ankur Maurya
  *
  */
-public class PlainTCPClientHandler implements Runnable {
+public class ProducerConsumerTCPClientHandler implements Runnable {
 
     private final String serverName;
     private final Socket clientSocket;
 
-    public PlainTCPClientHandler(String serverName, Socket clientSocket) {
+    public ProducerConsumerTCPClientHandler(String serverName, Socket clientSocket) {
         this.serverName = serverName;
         this.clientSocket = clientSocket;
     }

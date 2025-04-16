@@ -1,4 +1,4 @@
-package com.ankurmaurya.tool.tcp.server.minimal;
+package com.ankurmaurya.tool.tcp.server.minimal.producerconsumer;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -9,14 +9,14 @@ import java.net.Socket;
  * @author Ankur Maurya
  *
  */
-public class PlainTCPServer implements Runnable {
+public class ProducerConsumerTCPServer implements Runnable {
 
     private final String serverName;
     private final int serverPort;
     private final boolean serverListening;
 
 
-    public PlainTCPServer(String serverName, int serverPort) {
+    public ProducerConsumerTCPServer(String serverName, int serverPort) {
         this.serverName = serverName;
         this.serverPort = serverPort;
         this.serverListening = true;
@@ -33,7 +33,7 @@ public class PlainTCPServer implements Runnable {
                 socket = serverSocket.accept();
                 System.out.println("Client connected - " + socket.getInetAddress().getHostAddress());
 
-                Thread clientThread = new Thread(new PlainTCPClientHandler(serverName, socket));
+                Thread clientThread = new Thread(new ProducerConsumerTCPClientHandler(serverName, socket));
                 clientThread.start();
             }
         } catch (Exception e) {
@@ -50,3 +50,5 @@ public class PlainTCPServer implements Runnable {
     }
 
 }
+
+
