@@ -6,8 +6,7 @@
     <artifactId>tcp-server-minimal</artifactId>
     <version>0.1</version>
     <name>MinimalTCPServer</name>
-	<description>This is a TCP Server which will be listening on 
-		         the given port</description>
+	<description>This is a TCP Server which will be listening on the given port</description>
     
     
     <properties>
