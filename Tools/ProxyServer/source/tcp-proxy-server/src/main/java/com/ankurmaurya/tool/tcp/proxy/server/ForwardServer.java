@@ -50,10 +50,10 @@ public class ForwardServer implements Runnable {
            OutputStream clientOut = mClientSocket.getOutputStream();
            InputStream serverIn = mRemoteSocket.getInputStream();
            OutputStream serverOut = mRemoteSocket.getOutputStream();
-
+           
            // Start forwarding of socket data between server and client
-           ForwardThread clientForward = new ForwardThread(this, clientIn, serverOut);
-           ForwardThread serverForward = new ForwardThread(this, serverIn, clientOut);
+           ForwardThread clientForward = new ForwardThread(this, clientIn, serverOut, "inwardstream.log");
+           ForwardThread serverForward = new ForwardThread(this, serverIn, clientOut, "outwardstream.log");
            clientForward.start();
            serverForward.start();
 			

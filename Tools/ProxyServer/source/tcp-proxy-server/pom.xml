@@ -8,8 +8,8 @@
 	           from specific port to configured Host and Port.</description>
 
    <properties>
-		<jdk.source>11</jdk.source>
-		<jdk.version>11</jdk.version>
+		<jdk.source>1.8</jdk.source>
+		<jdk.version>1.8</jdk.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.main.class>com.ankurmaurya.tool.tcp.proxy.server.ProxyServerMain</project.main.class>
    </properties>
