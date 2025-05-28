@@ -2,8 +2,11 @@
 package com.ankurmaurya.tool.file.automator.handler;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import com.ankurmaurya.tool.file.automator.dto.FileAttribute;
 import com.ankurmaurya.tool.file.automator.dto.FileDetail;
@@ -14,19 +17,34 @@ import com.ankurmaurya.tool.file.automator.utils.Utility;
 
 public class DirectorySynchronizer {
 	
-	private File srcRootDirectory;
-	private File destRootDirectory;
+	private File leftRootDirectory;
+	private File rightRootDirectory;
+	
+	private Set<String> excludeFolders;
+	private Set<String> excludeFoldersWithPattern;
+	private Set<String> excludeFiles;
+	private Set<String> excludeFilesWithPattern;
+	
 	private boolean printFileSynchronizationTag;
-
+	
 	private FolderDetail scannedFolderDetail;
 	
 	
-	public DirectorySynchronizer(File srcRootDirectory, File destRootDirectory, boolean printFileSynchronizationTag) {
-		super();	
-		this.srcRootDirectory = srcRootDirectory;
-		this.destRootDirectory = destRootDirectory;
-		this.printFileSynchronizationTag = printFileSynchronizationTag;
+	public DirectorySynchronizer(File leftRootDirectory, File rightRootDirectory, 
+			Set<String> excludeFolders, Set<String> excludeFoldersWithPattern,
+			Set<String> excludeFiles, Set<String> excludeFilesWithPattern,
+			boolean printFileSynchronizationTag) {
 		
+		super();	
+		this.leftRootDirectory = leftRootDirectory;
+		this.rightRootDirectory = rightRootDirectory;
+		
+		this.excludeFolders = excludeFolders;
+		this.excludeFoldersWithPattern = excludeFoldersWithPattern;
+		this.excludeFiles = excludeFiles;
+		this.excludeFilesWithPattern = excludeFilesWithPattern;
+
+		this.printFileSynchronizationTag = printFileSynchronizationTag;
 	}
 
 	
@@ -38,19 +56,19 @@ public class DirectorySynchronizer {
 
 	public void scanAndEvaluateDirectoryDifference() {
 		try {
-			System.out.println("Scanning Source Directory - " + srcRootDirectory.getPath());
-			System.out.println("Matching with Destination Directory - " + destRootDirectory.getPath());
+			System.out.println("Scanning Left Directory - " + leftRootDirectory.getPath());
+			System.out.println("Matching with Right Directory - " + rightRootDirectory.getPath());
 			
-			if(!srcRootDirectory.exists()) {
-				System.out.println("Source Directory '" + srcRootDirectory.getPath() + "' does not exists.");
+			if(!leftRootDirectory.exists()) {
+				System.out.println("Left Directory '" + leftRootDirectory.getPath() + "' does not exists.");
 				return;
 			}
-			if(!destRootDirectory.exists()) {
-				System.out.println("Destination Directory '" + destRootDirectory.getPath() + "' does not exists.");
+			if(!rightRootDirectory.exists()) {
+				System.out.println("Right Directory '" + rightRootDirectory.getPath() + "' does not exists.");
 				return;
 			}
 
-			scannedFolderDetail = compareDirectories("", srcRootDirectory, destRootDirectory);
+			scannedFolderDetail = compareDirectories("", leftRootDirectory, rightRootDirectory);
 			System.out.println("\n");
 			System.out.println("Scanning completed and directory difference has been evaluated.");
 		} catch (Exception e) {
@@ -62,30 +80,30 @@ public class DirectorySynchronizer {
 	
 	public void showDirectoriesDifferenceReport() {
 		System.out.println("------- DIRECTORY DIFFERENCE REPORT ------- ");
-		System.out.println("Following file and folder differences were found in Destination Directory with respect to Source Directory.\n");
+		System.out.println("Following file and folder differences were found in Right Directory with respect to Left Directory.\n");
 		displayDirectorySynchronizationDetails("", scannedFolderDetail);
 	}
 	
 	
-	public void showSourceDirectoryMissingFoldersFilesReport() {
+	public void showLeftDirectoryMissingFoldersFilesReport() {
 		System.out.println("------- DIRECTORY FILES MISSING REPORT ------- ");
-		System.out.println("Following file and folder were found missing(Deleted) in Source Directory with respect to Destination Directory.\n");
+		System.out.println("Following file and folder were found missing(Deleted) in Left Directory with respect to Right Directory.\n");
 		FolderDetail missingFolderDetail = matchTheDirectoryFileAttributes(scannedFolderDetail, List.of(FileAttribute.DELETED));
 		displayDirectorySynchronizationDetails("", missingFolderDetail);
 	}
 	
 	
-	public void showSourceDirectoryNewFoldersFilesReport() {
+	public void showLeftDirectoryNewFoldersFilesReport() {
 		System.out.println("------- DIRECTORY NEW FILES REPORT ------- ");
-		System.out.println("Following file and folder were found added(New) in Source Directory with respect to Destination Directory.\n");
+		System.out.println("Following file and folder were found added(New) in Left Directory with respect to Right Directory.\n");
 		FolderDetail newFolderDetail = matchTheDirectoryFileAttributes(scannedFolderDetail, List.of(FileAttribute.NEW));
 		displayDirectorySynchronizationDetails("", newFolderDetail);
 	}
 	
 	
-	public void showSourceDirectoryModifiedFoldersFilesReport() {
+	public void showLeftDirectoryModifiedFoldersFilesReport() {
 		System.out.println("------- DIRECTORY FILES MODIFIED REPORT ------- ");
-		System.out.println("Following file and folder were found changed(Modified) in Source Directory with respect to Destination Directory.\n");
+		System.out.println("Following file and folder were found changed(Modified) in Left Directory with respect to Right Directory.\n");
 		FolderDetail modifiedFolderDetail = matchTheDirectoryFileAttributes(scannedFolderDetail, List.of(FileAttribute.MODIFIED));
 		displayDirectorySynchronizationDetails("", modifiedFolderDetail);
 	}
@@ -99,22 +117,85 @@ public class DirectorySynchronizer {
 	}
 	
 	
+	public void updateRightDirectory() {
+		System.out.println("------- UPDATE RIGHT DIRECTORY ------- ");
+		System.out.println("Copying only New and Updated files to the Right Directory\n");
+		synchronizeDifferenceInDirectories(scannedFolderDetail, List.of(FileAttribute.NEW, FileAttribute.MODIFIED), 
+				                           leftRootDirectory, rightRootDirectory);
+	}
+
+	
+	
+	private void synchronizeDifferenceInDirectories(FolderDetail folderDetail, List<FileAttribute> fileAttributes, 
+			File leftDirectory, File rightDirectory) {
+		
+		//Synchronize the Sub-Folders Difference
+		for(FolderDetail subFolderDetail : folderDetail.getFolderDetails()) {
+			File leftSubDirectory = new File(leftDirectory, subFolderDetail.getFolderName());
+			File rightSubDirectory = new File(rightDirectory, subFolderDetail.getFolderName());
+			
+			if(!rightSubDirectory.exists()) {
+				System.out.println("Creating New Folder in Right Directory : " + rightSubDirectory.getPath());
+				boolean dirCreated = rightSubDirectory.mkdirs();
+				System.out.println("New Folder Created : " + dirCreated);
+			}
+			
+			synchronizeDifferenceInDirectories(subFolderDetail, fileAttributes, leftSubDirectory, rightSubDirectory);
+		}
+		
+		//Synchronize the Files Difference
+		for(FileDetail fileDetail : folderDetail.getFileDetails()) {
+			FileAttribute fileAttr = fileDetail.getFileAttribute();
+			if(!isMatchesWithAnyFileAttributes(fileAttr, fileAttributes)) { 
+				continue;
+			}
+			
+			File leftFile = new File(leftDirectory, fileDetail.getFileName());
+			File rightFile = new File(rightDirectory, fileDetail.getFileName());
+			try {
+				if(fileAttr.equals(FileAttribute.NEW) && leftFile.exists()) {
+					System.out.println("Copying New File : " + leftFile.getName());
+					Files.copy(leftFile.toPath(), rightFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					if(rightFile.exists()) {
+						System.out.println("Copy:SUCCESS");
+					} else {
+						System.out.println("Copy:FAILED");
+					}
+				}
+				else if(fileAttr.equals(FileAttribute.MODIFIED) && leftFile.exists()) {
+					System.out.println("Updating File : " + leftFile.getName());
+					Files.copy(leftFile.toPath(), rightFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					if(rightFile.exists()) {
+						System.out.println("Update:SUCCESS");
+					} else {
+						System.out.println("Update:FAILED");
+					}
+				}
+			} catch (Exception e) {
+				System.out.println("Exception Copying file :- " + e.toString());
+			}
+		}
+		
+		
+	}
+	
+	
+	
 	private FolderDetail matchTheDirectoryFileAttributes(FolderDetail folderDetail, List<FileAttribute> fileAttributes) {
 		FolderDetail matchedFolderDetail = new FolderDetail(folderDetail.getFolderName(), 0);
 		matchedFolderDetail.setFolderAttribute(folderDetail.getFolderAttribute());
 		
-		//Assign Modified Attribute to Folder based on it Sub-Folders Attribute
+		//Match the Directory Folder Attribute based on it Sub-Folders Attribute
 		for(FolderDetail subFolderDetail : folderDetail.getFolderDetails()) {
 			FolderDetail possibleMisingFolderDetails = matchTheDirectoryFileAttributes(subFolderDetail, fileAttributes);
 			if(possibleMisingFolderDetails != null) {
-				//matchedFolderDetail.setFolderAttribute(possibleMisingFolderDetails.getFolderAttribute());
 				matchedFolderDetail.getFolderDetails().add(possibleMisingFolderDetails);
 				long folderSize = matchedFolderDetail.getFolderSize() + possibleMisingFolderDetails.getFolderSize();
 				matchedFolderDetail.setFolderSize(folderSize);
 			}
 		}
 		
-		//Assign Modified Attribute to Folder based on it Files Attribute
+		//Match the Directory File Attribute based on it Files Attribute
 		for(FileDetail fileDetail : folderDetail.getFileDetails()) {
 			FileAttribute fileAttr = fileDetail.getFileAttribute();
 			
@@ -159,153 +240,173 @@ public class DirectorySynchronizer {
 
 	
 	
-	private FolderDetail compareDirectories(String indent, File srcFolder, File destFolder) {
+	private FolderDetail compareDirectories(String indent, File leftFolder, File rightFolder) {
 		FolderDetail folderDetail = null;
 		try {
 			System.out.println("");
-			System.out.print(indent + srcFolder.getName());
+			System.out.print(indent + leftFolder.getName());
 
 			int fileCntr = 0;
-			folderDetail = new FolderDetail(srcFolder.getName(), 0);
+			folderDetail = new FolderDetail(leftFolder.getName(), 0);
 
-			File[] srcFiles = getListFilesOrderByFilesFirst(srcFolder.listFiles());
-			File[] destFiles = getListFilesOrderByFilesFirst(destFolder.listFiles());
-			if(destFiles == null) {
+			File[] leftFiles = getListFilesOrderByFilesFirst(leftFolder.listFiles());
+			File[] rightFiles = getListFilesOrderByFilesFirst(rightFolder.listFiles());
+			if(rightFiles == null) {
 				folderDetail.setFolderAttribute(FileAttribute.NEW);
 			}
-			if(srcFiles == null) {
+			if(leftFiles == null) {
 				folderDetail.setFolderAttribute(FileAttribute.DELETED);
 			}
 			
-			if (srcFolder.exists() && srcFiles != null) {
+			if (leftFolder.exists() && leftFiles != null) {
 				System.out.print(">>> ");
 			} else {
 				System.out.print("<<< ");
 			}
 			
+
+			if (isFolderToBeExcluded(leftFolder.getName())){
+				System.out.print("X");
+				return folderDetail;
+			}
 			
 			// SCAN FOR ALL THE FILES IN SOURCE FOLDER
-			if (srcFolder.exists() && srcFiles != null) {
-				for (File srcFile : srcFiles) {
-					String destFilePathWithoutRoot = srcFile.getPath().replace(srcFolder.getPath(), "");
-					File destFile = new File(destFolder, destFilePathWithoutRoot);
+			if (leftFolder.exists() && leftFiles != null) {
+				for (File leftFile : leftFiles) {
+					String rightFilePathWithoutRoot = leftFile.getPath().replace(leftFolder.getPath(), "");
+					File rightFile = new File(rightFolder, rightFilePathWithoutRoot);
+					if (leftFile.isDirectory()){
+						continue;
+					}
+					if (isFileToBeExcluded(leftFile.getName())){
+						System.out.print("X");
+						continue;
+					}
 
-					if (!srcFile.isDirectory()) {
-						if (fileCntr == 50) {
-							System.out.println();
-							System.out.print(indent);
-							fileCntr = 0;
-						}
+					if (fileCntr == 50) {
+						System.out.println();
+						System.out.print(indent);
+						fileCntr = 0;
+					}
 
-						FileDetail fileDetail = new FileDetail();
-						fileDetail.setFileName(srcFile.getName());
-						fileDetail.setFileSize(srcFile.length());
-						fileDetail.setLastModified(srcFile.lastModified());
+					FileDetail fileDetail = new FileDetail();
+					fileDetail.setFileName(leftFile.getName());
+					fileDetail.setFileSize(leftFile.length());
+					fileDetail.setLastModified(leftFile.lastModified());
 
-						long filesSize = folderDetail.getFolderSize() + fileDetail.getFileSize();
-						folderDetail.setFolderSize(filesSize);
+					long filesSize = folderDetail.getFolderSize() + fileDetail.getFileSize();
+					folderDetail.setFolderSize(filesSize);
 
-						if (destFile.exists()) {
-							if (srcFile.length() == destFile.length()) {
-								String srcFileChksum = Utility.generateFileChecksum(srcFile.getPath());
-								String destFileChksum = Utility.generateFileChecksum(destFile.getPath());
-								if (!srcFileChksum.equals(destFileChksum)) {
-									System.out.print("*");
-									fileDetail.setFileAttribute(FileAttribute.MODIFIED);
-								} else {
-									System.out.print("=");
-								}
-								fileDetail.setFileHash(srcFileChksum);
-							} else {
+					if (rightFile.exists()) {
+						if (leftFile.length() == rightFile.length()) {
+							String leftFileChksum = Utility.generateFileChecksum(leftFile.getPath());
+							String rightFileChksum = Utility.generateFileChecksum(rightFile.getPath());
+							if (!leftFileChksum.equals(rightFileChksum)) {
 								System.out.print("*");
 								fileDetail.setFileAttribute(FileAttribute.MODIFIED);
+							} else {
+								System.out.print("=");
 							}
+							fileDetail.setFileHash(leftFileChksum);
 						} else {
-							System.out.print("+");
-							fileDetail.setFileAttribute(FileAttribute.NEW);
+							System.out.print("*");
+							fileDetail.setFileAttribute(FileAttribute.MODIFIED);
 						}
-						folderDetail.getFileDetails().add(fileDetail);
-						fileCntr++;
+					} else {
+						System.out.print("+");
+						fileDetail.setFileAttribute(FileAttribute.NEW);
 					}
+					folderDetail.getFileDetails().add(fileDetail);
+					fileCntr++;
 				}
 			}
 
 			// SCAN FOR ALL THE FILES IN DESTINATION FOLDER
-			if (destFolder.exists() && destFiles != null) {
+			if (rightFolder.exists() && rightFiles != null) {
 				fileCntr = 0;
-				for (File destFile : destFiles) {
-					if (!destFile.isDirectory()) {
-						String srcFilePathWithoutRoot = destFile.getPath().replace(destFolder.getPath(), "");
-						File srcFile = new File(srcFolder, srcFilePathWithoutRoot);
-						if(srcFile.exists()) {
-							continue;
-						}
-	
-						if (fileCntr == 50) {
-							System.out.println();
-							System.out.print(indent);
-							fileCntr = 0;
-						}
+				for (File rightFile : rightFiles) {
+					if (rightFile.isDirectory()){
+						continue;
+					}
+					
+					String leftFilePathWithoutRoot = rightFile.getPath().replace(rightFolder.getPath(), "");
+					File leftFile = new File(leftFolder, leftFilePathWithoutRoot);
+					if(leftFile.exists()) {
+						continue;
+					}
+					
+					if (isFileToBeExcluded(leftFile.getName())){
+						System.out.print("X");
+						continue;
+					}
 
-						FileDetail fileDetail = new FileDetail();
-						fileDetail.setFileName(destFile.getName());
-						fileDetail.setFileSize(destFile.length());
-						fileDetail.setLastModified(destFile.lastModified());
-						fileDetail.setFileAttribute(FileAttribute.DELETED);
-						folderDetail.getFileDetails().add(fileDetail);
-						System.out.print("-");
-						fileCntr++;
-						
-						//Add the file size to parent folder only if the parent folder does not exists in Source folder
-						if(folderDetail.getFolderAttribute() != null && 
-						   folderDetail.getFolderAttribute().equals(FileAttribute.DELETED)) {
-						  long filesSize = folderDetail.getFolderSize() + fileDetail.getFileSize();
-						  folderDetail.setFolderSize(filesSize);
-						}
-						
+					if (fileCntr == 50) {
+						System.out.println();
+						System.out.print(indent);
+						fileCntr = 0;
+					}
+
+					FileDetail fileDetail = new FileDetail();
+					fileDetail.setFileName(rightFile.getName());
+					fileDetail.setFileSize(rightFile.length());
+					fileDetail.setLastModified(rightFile.lastModified());
+					fileDetail.setFileAttribute(FileAttribute.DELETED);
+					folderDetail.getFileDetails().add(fileDetail);
+					System.out.print("-");
+					fileCntr++;
+					
+					//Add the file size to parent folder only if the parent folder does not exists in Source folder
+					if(folderDetail.getFolderAttribute() != null && 
+					   folderDetail.getFolderAttribute().equals(FileAttribute.DELETED)) {
+					  long filesSize = folderDetail.getFolderSize() + fileDetail.getFileSize();
+					  folderDetail.setFolderSize(filesSize);
 					}
 				}
 			}
 
 			// SCAN FOR ALL THE SUB-FOLDERS IN SOURCE FOLDER
-			if (srcFolder.exists() && srcFiles != null) {
-				for (File srcFile : srcFiles) {
-					String destFilePathWithoutRoot = srcFile.getPath().replace(srcFolder.getPath(), "");
-					File destFile = new File(destFolder, destFilePathWithoutRoot);
+			if (leftFolder.exists() && leftFiles != null) {
+				for (File leftFile : leftFiles) {
+					String rightFilePathWithoutRoot = leftFile.getPath().replace(leftFolder.getPath(), "");
+					File rightFile = new File(rightFolder, rightFilePathWithoutRoot);
 
-					if (srcFile.isDirectory()) {
-						FolderDetail subFolderDetail = compareDirectories(indent + "| ", srcFile, destFile);
+					if (!leftFile.isDirectory()) {
+						continue;
+					}
 
-						if (!destFile.exists()) {
-							folderDetail.setFolderAttribute(FileAttribute.NEW);
-						}
-						if (subFolderDetail != null) {
-							folderDetail.getFolderDetails().add(subFolderDetail);
-							long foldersSize = folderDetail.getFolderSize() + subFolderDetail.getFolderSize();
-							folderDetail.setFolderSize(foldersSize);
-						}
+					FolderDetail subFolderDetail = compareDirectories(indent + "| ", leftFile, rightFile);
+
+					if (!rightFile.exists()) {
+						folderDetail.setFolderAttribute(FileAttribute.NEW);
+					}
+					if (subFolderDetail != null) {
+						folderDetail.getFolderDetails().add(subFolderDetail);
+						long foldersSize = folderDetail.getFolderSize() + subFolderDetail.getFolderSize();
+						folderDetail.setFolderSize(foldersSize);
 					}
 				}
 			}
 
 			// SCAN FOR ALL THE SUB-FOLDERS IN DESTINATION FOLDER
-			if (destFolder.exists() && destFiles != null) {
-				for (File destFile : destFiles) {
-					String srcFilePathWithoutRoot = destFile.getPath().replace(destFolder.getPath(), "");
-					File srcFile = new File(srcFolder, srcFilePathWithoutRoot);
-
-					if (destFile.isDirectory() && !srcFile.exists()) {
-						FolderDetail subFolderDetail = compareDirectories(indent + "| ", srcFile, destFile);
-						subFolderDetail.setFolderAttribute(FileAttribute.DELETED);
-						
-						if (subFolderDetail != null) {
-							folderDetail.getFolderDetails().add(subFolderDetail);
-							//Add the file size to parent folder only if the parent folder does not exists in Source folder
-							if(folderDetail.getFolderAttribute() != null && 
-							   folderDetail.getFolderAttribute().equals(FileAttribute.DELETED)) {
-								long foldersSize = folderDetail.getFolderSize() + subFolderDetail.getFolderSize();
-								folderDetail.setFolderSize(foldersSize);
-							}
+			if (rightFolder.exists() && rightFiles != null) {
+				for (File rightFile : rightFiles) {
+					String leftFilePathWithoutRoot = rightFile.getPath().replace(rightFolder.getPath(), "");
+					File leftFile = new File(leftFolder, leftFilePathWithoutRoot);
+					
+					if (!rightFile.isDirectory() || leftFile.exists()) {
+						continue;
+					}
+					
+					FolderDetail subFolderDetail = compareDirectories(indent + "| ", leftFile, rightFile);
+					subFolderDetail.setFolderAttribute(FileAttribute.DELETED);
+					
+					if (subFolderDetail != null) {
+						folderDetail.getFolderDetails().add(subFolderDetail);
+						//Add the file size to parent folder only if the parent folder does not exists in Source folder
+						if(folderDetail.getFolderAttribute() != null && 
+						   folderDetail.getFolderAttribute().equals(FileAttribute.DELETED)) {
+							long foldersSize = folderDetail.getFolderSize() + subFolderDetail.getFolderSize();
+							folderDetail.setFolderSize(foldersSize);
 						}
 					}
 				}
@@ -348,6 +449,7 @@ public class DirectorySynchronizer {
 		long modifiedFiles = folderDetail.getFileDetails().stream()
 				.filter(e-> e.getFileAttribute() != null && FileAttribute.MODIFIED.equals(e.getFileAttribute())).count();
 		long notChangedFile = folderDetail.getFileDetails().size() - (newFiles + modifiedFiles + deletedFiles);
+		
 		
 		String fileStats = "";
 		String folderStats = indentSpace;
@@ -413,8 +515,36 @@ public class DirectorySynchronizer {
 	}
 	
 	
-
+	
+	private boolean isFileToBeExcluded(String fileName) {
+		boolean fileShouldBeExcluded = false;
+		if(!excludeFiles.isEmpty()) {
+			fileShouldBeExcluded = excludeFiles.contains(fileName);
+		}
+		if(!excludeFilesWithPattern.isEmpty() && !fileShouldBeExcluded) {
+			fileShouldBeExcluded = excludeFilesWithPattern.stream().anyMatch(e->Utility.matchesPattern(fileName, e));
+		}
+		return fileShouldBeExcluded;
+	}
+	
+	
+	
+	private boolean isFolderToBeExcluded(String folderName) {
+		boolean folderShouldBeExcluded = false;
+		if(!excludeFolders.isEmpty()) {
+			folderShouldBeExcluded = excludeFolders.contains(folderName);
+		}
+		if(!excludeFoldersWithPattern.isEmpty() && !folderShouldBeExcluded) {
+			folderShouldBeExcluded = excludeFoldersWithPattern.stream().anyMatch(e->Utility.matchesPattern(folderName, e));
+		}
+		return folderShouldBeExcluded;
+	}
+	
+	
+	
 }
+
+
 
 
 

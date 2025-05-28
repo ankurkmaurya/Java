@@ -3,12 +3,14 @@ package com.ankurmaurya.tool.file.automator;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 
 import com.ankurmaurya.tool.file.automator.dto.KeywordExtractorMeta;
-import com.ankurmaurya.tool.file.automator.handler.FileSearchHandler;
 import com.ankurmaurya.tool.file.automator.handler.DirectorySynchronizer;
+import com.ankurmaurya.tool.file.automator.handler.FileSearchHandler;
 import com.ankurmaurya.tool.file.automator.handler.HashValueGenerator;
 import com.ankurmaurya.tool.file.automator.utils.Utility;
 
@@ -27,7 +29,7 @@ public class Automator {
 				System.out.println("1 : Find Keywords occurence Count in plain/text files.");
 				System.out.println("2 : Generate Hash Value (SHA1,SHA256) for files.");
 				System.out.println("3 : Find and Extract Keywords value from plain/text files.");
-				System.out.println("4 : Find Difference between 2 folders.");
+				System.out.println("4 : Find and Synchronize the Difference between 2 directories.");
 				System.out.println("5 : Exit");
 				System.out.println("------------------------- MODE MENU -------------------------");
 
@@ -125,67 +127,118 @@ public class Automator {
 	}
 	
 	public static void option4Handler(Scanner scanner) {
-		System.out.println("Please provide base(source) directory path to be evaluated.");
-		String srcFolderPath = scanner.nextLine();
-		System.out.println("Please provide destination directory path whose difference need to be compared with base directory.");
-		String destFolderPath = scanner.nextLine();
+		System.out.println("Please provide Left(source) directory path to be evaluated.");
+		String leftFolderPath = scanner.nextLine();
+		System.out.println("Please provide Right(destination) directory path whose difference need to be compared with Left directory.");
+		String rightFolderPath = scanner.nextLine();
+
+		System.out.println("Please provide Folder-Name of any folder that need to be excluded from scanning.");
+		System.out.println("Folder-Name with pattern can also be included just provide pattern name including (.*) pattern sequence.");
+		System.out.println("(Values : FolderName1,FolderName2,FolderName3,FolderPattern1.*,.*FolderPattern2,.*FolderPattern3.*)");
+		String excludeFoldersSeq = scanner.nextLine();
+
+		System.out.println("Please provide File-Name of any file that need to be excluded from scanning.");
+		System.out.println("File-Name with pattern can also be included just provide pattern name including (.*) pattern sequence.");
+		System.out.println("(Values : FileName1,FileName2,FileName3,FilePattern1.*,.*FilePattern2,.*FilePattern3.*)");
+		String excludeFilesSeq = scanner.nextLine();
+
 		System.out.println("Do you want to print File Synchronization Tag while displaying report. (Value : Y[Yes[, N[No])");
 		String printFileSynchTag = scanner.nextLine();
 		try {
 			boolean printFileSynchronizationTag = false;
-			if(printFileSynchTag.equalsIgnoreCase("y")) {
+			if (printFileSynchTag.equalsIgnoreCase("y")) {
 				printFileSynchronizationTag = true;
 			}
-			
-			File srcFolder = new File(srcFolderPath);
-			File destFolder = new File(destFolderPath);
 
-			DirectorySynchronizer directorySynchronizer = new DirectorySynchronizer(srcFolder, destFolder, printFileSynchronizationTag);
-			directorySynchronizer.scanAndEvaluateDirectoryDifference();
+			File leftFolder = new File(leftFolderPath);
+			File rightFolder = new File(rightFolderPath);
 			
-			if(directorySynchronizer.getScannedFolderDetail() == null) {
-				return;
+			String[] excludeFoldersArray;
+			Set<String> excludeFolders = new HashSet<>();
+			Set<String> excludeFoldersWithPattern = new HashSet<>();
+			if (excludeFoldersSeq.contains(",")) {
+				excludeFoldersArray = excludeFoldersSeq.split(",");
+			} else {
+				excludeFoldersArray = new String[1];
+				excludeFoldersArray[0] = excludeFoldersSeq;
+			}
+			for (String excludeFolder : excludeFoldersArray) {
+				if (excludeFolder.contains(".*")) {
+					excludeFoldersWithPattern.add(excludeFolder);
+				} else {
+					excludeFolders.add(excludeFolder);
+				}
 			}
 			
+			String[] excludeFilesArray;
+			Set<String> excludeFiles = new HashSet<>();
+			Set<String> excludeFilesWithPattern = new HashSet<>();
+			if (excludeFilesSeq.contains(",")) {
+				excludeFilesArray = excludeFilesSeq.split(",");
+			} else {
+				excludeFilesArray = new String[1];
+				excludeFilesArray[0] = excludeFilesSeq;
+			}
+			for (String excludeFile : excludeFilesArray) {
+				if (excludeFile.contains(".*")) {
+					excludeFilesWithPattern.add(excludeFile);
+				} else {
+					excludeFiles.add(excludeFile);
+				}
+			}
+
+			DirectorySynchronizer directorySynchronizer = new DirectorySynchronizer(leftFolder, rightFolder,
+					excludeFolders, excludeFoldersWithPattern, excludeFiles, excludeFilesWithPattern,
+					printFileSynchronizationTag);
+			directorySynchronizer.scanAndEvaluateDirectoryDifference();
+
+			if (directorySynchronizer.getScannedFolderDetail() == null) {
+				return;
+			}
+
 			String folderOption;
 			do {
 				System.out.println("");
 				System.out.println("------------------------- DIRECTORY SCAN OPTIONS -------------------------");
-				System.out.println("Choose option to manage files in Folders ");
-				System.out.println("a : Show Destination Directory Difference Report.");
-				System.out.println("b : Show Source Directory missing folders & files Report.");
-				System.out.println("c : Show Source Directory new folders & files Report.");
-				System.out.println("d : Show Source Directory modified folders & files Report.");
-				System.out.println("e : Show Source Directory unmodified folders & files Report.");
-				System.out.println("f : Exit");
+				System.out.println("Choose option to manage difference between Left and Right directories ");
+				System.out.println("a : Show Right Directory Difference Report.");
+				System.out.println("b : Show Left Directory missing folders & files Report.");
+				System.out.println("c : Show Left Directory new folders & files Report.");
+				System.out.println("d : Show Left Directory modified folders & files Report.");
+				System.out.println("e : Show Left Directory unmodified folders & files Report.");
+				System.out.println("f : Update Right Directory (Copy only New and Updated files to the Right Directory).");
+				System.out.println("z : Exit");
 				System.out.println("------------------------- DIRECTORY SCAN OPTIONS -------------------------");
 				System.out.println("");
-				
-				folderOption =  scanner.nextLine();
+
+				folderOption = scanner.nextLine();
 				switch (folderOption) {
-				case "a": 
+				case "a":
 					directorySynchronizer.showDirectoriesDifferenceReport();
 					break;
-				case "b": 
-					directorySynchronizer.showSourceDirectoryMissingFoldersFilesReport();
+				case "b":
+					directorySynchronizer.showLeftDirectoryMissingFoldersFilesReport();
 					break;
-				case "c": 
-					directorySynchronizer.showSourceDirectoryNewFoldersFilesReport();
+				case "c":
+					directorySynchronizer.showLeftDirectoryNewFoldersFilesReport();
 					break;
-				case "d": 
-					directorySynchronizer.showSourceDirectoryModifiedFoldersFilesReport();
+				case "d":
+					directorySynchronizer.showLeftDirectoryModifiedFoldersFilesReport();
 					break;
-				case "e": 
+				case "e":
 					directorySynchronizer.showSourceDirectoryUnModifiedFoldersFilesReport();
 					break;
+				case "f":
+					directorySynchronizer.updateRightDirectory();
+					break;
 				default:
-					if(!"f".equals(folderOption)) {
+					if (!"z".equals(folderOption)) {
 						System.out.println("Invalid Choice!");
 					}
-	               break;
-			    }
-			} while (!"f".equals(folderOption));
-			
+					break;
+				}
+			} while (!"z".equals(folderOption));
+
 		} catch (Exception e) {
 			System.out.println("Exception option4Handler() : " + e.toString());
 		}

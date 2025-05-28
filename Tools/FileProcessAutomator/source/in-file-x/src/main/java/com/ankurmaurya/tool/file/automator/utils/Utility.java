@@ -12,6 +12,8 @@ import java.io.FileWriter;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 
@@ -100,6 +102,20 @@ public class Utility {
         	System.out.println("Exception generateFileChecksum() : " + e.toString());
         }
         return checksum;
+    }
+    
+    
+    
+    public static boolean matchesPattern(String inputStr, String pattern) {
+        boolean matches = false;
+        try {
+            Pattern p = Pattern.compile(pattern);
+            Matcher m = p.matcher(inputStr);
+            matches = m.matches();
+        } catch (Exception e) {
+        	System.out.println("Exception matchesPattern() : " + e);
+        }
+        return matches;
     }
 
     
