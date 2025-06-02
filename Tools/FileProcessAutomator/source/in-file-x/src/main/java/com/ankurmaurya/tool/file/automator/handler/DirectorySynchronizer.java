@@ -2,9 +2,13 @@
 package com.ankurmaurya.tool.file.automator.handler;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -25,6 +29,7 @@ public class DirectorySynchronizer {
 	private Set<String> excludeFiles;
 	private Set<String> excludeFilesWithPattern;
 	
+	private boolean confirmFileEqualityByHashing;
 	private boolean printFileSynchronizationTag;
 	
 	private FolderDetail scannedFolderDetail;
@@ -33,6 +38,7 @@ public class DirectorySynchronizer {
 	public DirectorySynchronizer(File leftRootDirectory, File rightRootDirectory, 
 			Set<String> excludeFolders, Set<String> excludeFoldersWithPattern,
 			Set<String> excludeFiles, Set<String> excludeFilesWithPattern,
+			boolean confirmFileEqualityByHashing,
 			boolean printFileSynchronizationTag) {
 		
 		super();	
@@ -44,10 +50,15 @@ public class DirectorySynchronizer {
 		this.excludeFiles = excludeFiles;
 		this.excludeFilesWithPattern = excludeFilesWithPattern;
 
+		this.confirmFileEqualityByHashing = confirmFileEqualityByHashing;
 		this.printFileSynchronizationTag = printFileSynchronizationTag;
 	}
 
-	
+
+	public void setPrintFileSynchronizationTag(boolean printFileSynchronizationTag) {
+		this.printFileSynchronizationTag = printFileSynchronizationTag;
+	}
+
 	public FolderDetail getScannedFolderDetail() {
 		return scannedFolderDetail;
 	}
@@ -119,72 +130,101 @@ public class DirectorySynchronizer {
 	
 	public void updateRightDirectory() {
 		System.out.println("------- UPDATE RIGHT DIRECTORY ------- ");
-		System.out.println("Copying only New and Updated files to the Right Directory\n");
+		System.out.println("Copying only New and Updated files/folders to the Right Directory\n");
 		synchronizeDifferenceInDirectories(scannedFolderDetail, List.of(FileAttribute.NEW, FileAttribute.MODIFIED), 
 				                           leftRootDirectory, rightRootDirectory);
 	}
-
 	
 	
-	private void synchronizeDifferenceInDirectories(FolderDetail folderDetail, List<FileAttribute> fileAttributes, 
+	public void mirrorRightDirectoryWithLeft() {
+		System.out.println("------- MIRROR RIGHT DIRECTORY ------- ");
+		System.out.println("Copy New, Updated files/folders and Delete the missing files/folders in the Right Directory\n");
+		synchronizeDifferenceInDirectories(scannedFolderDetail, List.of(FileAttribute.NEW, FileAttribute.MODIFIED, FileAttribute.DELETED), 
+				                           leftRootDirectory, rightRootDirectory);
+	}
+	
+	
+	
+	private void synchronizeDifferenceInDirectories(FolderDetail folderDetail, List<FileAttribute> fileAttributes,
 			File leftDirectory, File rightDirectory) {
-		
-		//Synchronize the Sub-Folders Difference
-		for(FolderDetail subFolderDetail : folderDetail.getFolderDetails()) {
+
+		// Synchronize the Sub-Folders Difference
+		for (FolderDetail subFolderDetail : folderDetail.getFolderDetails()) {
 			File leftSubDirectory = new File(leftDirectory, subFolderDetail.getFolderName());
 			File rightSubDirectory = new File(rightDirectory, subFolderDetail.getFolderName());
-			
-			if(!rightSubDirectory.exists()) {
+
+			if (!rightSubDirectory.exists()) {
 				System.out.println("Creating New Folder in Right Directory : " + rightSubDirectory.getPath());
 				boolean dirCreated = rightSubDirectory.mkdirs();
 				System.out.println("New Folder Created : " + dirCreated);
 			}
-			
+
 			synchronizeDifferenceInDirectories(subFolderDetail, fileAttributes, leftSubDirectory, rightSubDirectory);
 		}
-		
-		//Synchronize the Files Difference
-		for(FileDetail fileDetail : folderDetail.getFileDetails()) {
+
+		// Synchronize the Files Difference
+		for (FileDetail fileDetail : folderDetail.getFileDetails()) {
 			FileAttribute fileAttr = fileDetail.getFileAttribute();
-			if(!isMatchesWithAnyFileAttributes(fileAttr, fileAttributes)) { 
+			if (!isMatchesWithAnyFileAttributes(fileAttr, fileAttributes)) {
 				continue;
 			}
-			
+
 			File leftFile = new File(leftDirectory, fileDetail.getFileName());
 			File rightFile = new File(rightDirectory, fileDetail.getFileName());
 			try {
-				if(fileAttr.equals(FileAttribute.NEW) && leftFile.exists()) {
-					System.out.println("Copying New File : " + leftFile.getName());
+				if (fileAttr.equals(FileAttribute.NEW) && leftFile.exists()) {
+					System.out.print("Copying New File : " + leftFile.getName());
 					Files.copy(leftFile.toPath(), rightFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-					if(rightFile.exists()) {
-						System.out.println("Copy:SUCCESS");
+					if (rightFile.exists()) {
+						System.out.println(", Status : SUCCESS");
 					} else {
-						System.out.println("Copy:FAILED");
+						System.out.println(", Status : FAILED");
 					}
-				}
-				else if(fileAttr.equals(FileAttribute.MODIFIED) && leftFile.exists()) {
-					System.out.println("Updating File : " + leftFile.getName());
+				} else if (fileAttr.equals(FileAttribute.MODIFIED) && leftFile.exists()) {
+					System.out.print("Updating File : " + leftFile.getName());
 					Files.copy(leftFile.toPath(), rightFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-					if(rightFile.exists()) {
-						System.out.println("Update:SUCCESS");
+					if (rightFile.exists()) {
+						System.out.println(", Status : SUCCESS");
 					} else {
-						System.out.println("Update:FAILED");
+						System.out.println(", Status : FAILED");
+					}
+				} else if (fileAttr.equals(FileAttribute.DELETED) && !leftFile.exists() && rightFile.exists()) {
+					System.out.print("Deleting File : " + rightFile.getName());
+					boolean rfDeleted = rightFile.delete();
+					if (rfDeleted && !rightFile.exists()) {
+						System.out.println(", Status : SUCCESS");
+					} else {
+						System.out.println(", Status : FAILED");
 					}
 				}
 			} catch (Exception e) {
 				System.out.println("Exception Copying file :- " + e.toString());
 			}
 		}
-		
-		
+
+		// Delete Folder which does not exists in Left Directory but exists in Right Directory
+		if (!leftDirectory.exists() && rightDirectory.exists()
+				&& folderDetail.getFolderAttribute().equals(FileAttribute.DELETED)
+				&& isMatchesWithAnyFileAttributes(FileAttribute.DELETED, fileAttributes)) {
+			System.out.print("Deleting Folder : " + leftDirectory.getName());
+			boolean rfldDeleted = rightDirectory.delete();
+			if (rfldDeleted && !rightDirectory.exists()) {
+				System.out.println(", Status : SUCCESS");
+			} else {
+				System.out.println(", Status : FAILED");
+			}
+		}
+
 	}
 	
 	
 	
 	private FolderDetail matchTheDirectoryFileAttributes(FolderDetail folderDetail, List<FileAttribute> fileAttributes) {
 		FolderDetail matchedFolderDetail = new FolderDetail(folderDetail.getFolderName(), 0);
-		matchedFolderDetail.setFolderAttribute(folderDetail.getFolderAttribute());
-		
+		if(folderDetail.getFolderAttribute()!=null) {
+		  matchedFolderDetail.setFolderAttribute(folderDetail.getFolderAttribute());
+		}
+
 		//Match the Directory Folder Attribute based on it Sub-Folders Attribute
 		for(FolderDetail subFolderDetail : folderDetail.getFolderDetails()) {
 			FolderDetail possibleMisingFolderDetails = matchTheDirectoryFileAttributes(subFolderDetail, fileAttributes);
@@ -247,10 +287,11 @@ public class DirectorySynchronizer {
 			System.out.print(indent + leftFolder.getName());
 
 			int fileCntr = 0;
+			int batchCntr = 0;
 			folderDetail = new FolderDetail(leftFolder.getName(), 0);
 
-			File[] leftFiles = getListFilesOrderByFilesFirst(leftFolder.listFiles());
-			File[] rightFiles = getListFilesOrderByFilesFirst(rightFolder.listFiles());
+			File[] leftFiles = getListFilesOrderByFilesFirst(leftFolder);
+			File[] rightFiles = getListFilesOrderByFilesFirst(rightFolder);
 			if(rightFiles == null) {
 				folderDetail.setFolderAttribute(FileAttribute.NEW);
 			}
@@ -283,10 +324,10 @@ public class DirectorySynchronizer {
 						continue;
 					}
 
-					if (fileCntr == 50) {
-						System.out.println();
+					if (batchCntr == 50) {
+						System.out.println("(" + fileCntr + ")");
 						System.out.print(indent);
-						fileCntr = 0;
+						batchCntr = 0;
 					}
 
 					FileDetail fileDetail = new FileDetail();
@@ -296,27 +337,37 @@ public class DirectorySynchronizer {
 
 					long filesSize = folderDetail.getFolderSize() + fileDetail.getFileSize();
 					folderDetail.setFolderSize(filesSize);
-
-					if (rightFile.exists()) {
-						if (leftFile.length() == rightFile.length()) {
-							String leftFileChksum = Utility.generateFileChecksum(leftFile.getPath());
-							String rightFileChksum = Utility.generateFileChecksum(rightFile.getPath());
-							if (!leftFileChksum.equals(rightFileChksum)) {
-								System.out.print("*");
-								fileDetail.setFileAttribute(FileAttribute.MODIFIED);
-							} else {
-								System.out.print("=");
-							}
-							fileDetail.setFileHash(leftFileChksum);
-						} else {
-							System.out.print("*");
-							fileDetail.setFileAttribute(FileAttribute.MODIFIED);
-						}
-					} else {
+					
+					if (!rightFile.exists()) {
 						System.out.print("+");
 						fileDetail.setFileAttribute(FileAttribute.NEW);
+						continue;
 					}
+
+					if (leftFile.length() != rightFile.length()) {
+						System.out.print("*");
+						fileDetail.setFileAttribute(FileAttribute.MODIFIED);
+						continue;
+					}
+					
+		
+					boolean filesAreEqual;
+					if(confirmFileEqualityByHashing) {
+						//Check if the two files are equal by file data Hash
+						filesAreEqual = isTwoFilesAreEqual(leftFile, rightFile);
+					} else {
+						//Check if the two files ends are equal
+						filesAreEqual = isTwoFilesEndBytesAreEqual(leftFile, rightFile);
+					}
+					if (filesAreEqual) {
+						System.out.print("=");
+					} else {
+						System.out.print("*");
+						fileDetail.setFileAttribute(FileAttribute.MODIFIED);
+					}
+
 					folderDetail.getFileDetails().add(fileDetail);
+					batchCntr++;
 					fileCntr++;
 				}
 			}
@@ -324,6 +375,7 @@ public class DirectorySynchronizer {
 			// SCAN FOR ALL THE FILES IN DESTINATION FOLDER
 			if (rightFolder.exists() && rightFiles != null) {
 				fileCntr = 0;
+				batchCntr = 0;
 				for (File rightFile : rightFiles) {
 					if (rightFile.isDirectory()){
 						continue;
@@ -340,10 +392,10 @@ public class DirectorySynchronizer {
 						continue;
 					}
 
-					if (fileCntr == 50) {
-						System.out.println();
+					if (batchCntr == 50) {
+						System.out.println("(" + fileCntr + ")");
 						System.out.print(indent);
-						fileCntr = 0;
+						batchCntr = 0;
 					}
 
 					FileDetail fileDetail = new FileDetail();
@@ -353,6 +405,7 @@ public class DirectorySynchronizer {
 					fileDetail.setFileAttribute(FileAttribute.DELETED);
 					folderDetail.getFileDetails().add(fileDetail);
 					System.out.print("-");
+					batchCntr++;
 					fileCntr++;
 					
 					//Add the file size to parent folder only if the parent folder does not exists in Source folder
@@ -441,7 +494,41 @@ public class DirectorySynchronizer {
 	
 	
 	
+	private boolean isTwoFilesEndBytesAreEqual(File leftFile, File rightFile) {
+		boolean bytesAreEqual = false;
+		try {
+			byte[] leftFileEndBytes = Utility.getFileEndByteBuffer(leftFile.getPath());
+			byte[] rightFileEndBytes = Utility.getFileEndByteBuffer(rightFile.getPath());
+			bytesAreEqual = Arrays.equals(leftFileEndBytes, rightFileEndBytes);
+		} catch (Exception e) {
+			System.out.println("Exception isTwoFilesEndBytesAreEqual() :- " + e.toString());
+		}
+		return bytesAreEqual;
+	}
+	
+	
+	
+	private boolean isTwoFilesAreEqual(File leftFile, File rightFile) {
+		boolean bytesAreEqual = false;
+		try {
+			String leftFileChksum = Utility.generateFileChecksum(leftFile.getPath());
+			String rightFileChksum = Utility.generateFileChecksum(rightFile.getPath());
+			bytesAreEqual = leftFileChksum.equals(rightFileChksum);
+		} catch (Exception e) {
+			System.out.println("Exception isTwoFilesAreEqual() :- " + e.toString());
+		}
+		return bytesAreEqual;
+	}
+	
+	
+	
 	private void displayDirectorySynchronizationDetails(String indentSpace, FolderDetail folderDetail) {
+		if(folderDetail == null) {
+			System.out.println("No Directory matched the criteria.");
+			return;
+		}
+		
+		
 		long deletedFiles = folderDetail.getFileDetails().stream()
 				.filter(e-> e.getFileAttribute() != null && FileAttribute.DELETED.equals(e.getFileAttribute())).count();
 		long newFiles = folderDetail.getFileDetails().stream()
@@ -493,7 +580,7 @@ public class DirectorySynchronizer {
 	}
 	
 	
-	
+	/*
 	private File[] getListFilesOrderByFilesFirst(File[] files) {
 		List<File> fileList = new ArrayList<>();
 		List<File> folderList = new ArrayList<>();
@@ -503,12 +590,39 @@ public class DirectorySynchronizer {
 		}
 		
 		for (File file : files) {
+			
 			if (file.isDirectory()) {
 				folderList.add(file);
 			} else {
 				fileList.add(file);
 			}
 		}
+		fileList.addAll(folderList);
+		File[] orderedFiles = new File[fileList.size()];
+		return fileList.toArray(orderedFiles);
+	}
+	*/
+	
+	private File[] getListFilesOrderByFilesFirst(File parentFolder) throws IOException {
+		List<File> fileList = new ArrayList<>();
+		List<File> folderList = new ArrayList<>();
+		
+		if(!parentFolder.exists() || !parentFolder.isDirectory()) {
+			return null;
+		}
+		
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(parentFolder.toPath())) {
+			int a = 1;
+	        for (Path path : stream) {
+	        	//System.out.println(a);
+	            if (Files.isDirectory(path)) {
+	            	folderList.add(path.toFile());
+	            } else {
+	            	fileList.add(path.toFile());
+	            }
+	            a++;
+	        }
+	    }
 		fileList.addAll(folderList);
 		File[] orderedFiles = new File[fileList.size()];
 		return fileList.toArray(orderedFiles);
@@ -543,6 +657,8 @@ public class DirectorySynchronizer {
 	
 	
 }
+
+
 
 
 

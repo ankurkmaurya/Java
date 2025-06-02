@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,10 +65,6 @@ public class Utility {
     
     public static String convertToReadableBytes(long size) {
         String readableByte;
-        if(size<0) {
-        	//size = size * -1;
-        }
-        
         if (size >= 1073741824) {
         	readableByte = String.format("%.2f GB", ((double)size / 1073741824));
         } else if (size >= 1048576) {
@@ -102,6 +100,27 @@ public class Utility {
         	System.out.println("Exception generateFileChecksum() : " + e.toString());
         }
         return checksum;
+    }
+    
+    
+    public static byte[] getFileEndByteBuffer(String filePath) {
+    	byte[] buffer = null;
+        int bytesToRead = 256;
+        try (RandomAccessFile raf = new RandomAccessFile(new File(filePath), "r")) {
+            long fileLength = raf.length();
+            if (fileLength < bytesToRead) {
+              bytesToRead = (int) fileLength;
+            }
+
+            long startPosition = fileLength - bytesToRead;
+            raf.seek(startPosition);
+
+            buffer = new byte[bytesToRead];
+            raf.readFully(buffer);
+        } catch (IOException e) {
+        	System.out.println("Exception getFileEndByteBuffer() : " + e.toString());
+        }
+        return buffer;
     }
     
     

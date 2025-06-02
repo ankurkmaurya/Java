@@ -142,9 +142,17 @@ public class Automator {
 		System.out.println("(Values : FileName1,FileName2,FileName3,FilePattern1.*,.*FilePattern2,.*FilePattern3.*)");
 		String excludeFilesSeq = scanner.nextLine();
 
+		System.out.println("Do you want to confirm, Files are equal by Hashing. (Value : Y[Yes[, N[No])");
+		String cnfrmFileEqualByHash = scanner.nextLine();
+		
 		System.out.println("Do you want to print File Synchronization Tag while displaying report. (Value : Y[Yes[, N[No])");
 		String printFileSynchTag = scanner.nextLine();
 		try {
+			boolean confirmFileEqualityByHashing = false;
+			if (cnfrmFileEqualByHash.equalsIgnoreCase("y")) {
+				confirmFileEqualityByHashing = true;
+			}
+			
 			boolean printFileSynchronizationTag = false;
 			if (printFileSynchTag.equalsIgnoreCase("y")) {
 				printFileSynchronizationTag = true;
@@ -189,7 +197,7 @@ public class Automator {
 
 			DirectorySynchronizer directorySynchronizer = new DirectorySynchronizer(leftFolder, rightFolder,
 					excludeFolders, excludeFoldersWithPattern, excludeFiles, excludeFilesWithPattern,
-					printFileSynchronizationTag);
+					confirmFileEqualityByHashing, printFileSynchronizationTag);
 			directorySynchronizer.scanAndEvaluateDirectoryDifference();
 
 			if (directorySynchronizer.getScannedFolderDetail() == null) {
@@ -201,12 +209,15 @@ public class Automator {
 				System.out.println("");
 				System.out.println("------------------------- DIRECTORY SCAN OPTIONS -------------------------");
 				System.out.println("Choose option to manage difference between Left and Right directories ");
-				System.out.println("a : Show Right Directory Difference Report.");
-				System.out.println("b : Show Left Directory missing folders & files Report.");
-				System.out.println("c : Show Left Directory new folders & files Report.");
-				System.out.println("d : Show Left Directory modified folders & files Report.");
-				System.out.println("e : Show Left Directory unmodified folders & files Report.");
-				System.out.println("f : Update Right Directory (Copy only New and Updated files to the Right Directory).");
+				System.out.println("a : Show File Synchronization Tag.");
+				System.out.println("b : Hide File Synchronization Tag.");
+				System.out.println("c : Show Right Directory Difference Report.");
+				System.out.println("d : Show Left Directory missing folders & files Report.");
+				System.out.println("e : Show Left Directory new folders & files Report.");
+				System.out.println("f : Show Left Directory modified folders & files Report.");
+				System.out.println("g : Show Left Directory unmodified folders & files Report.");
+				System.out.println("h : Update (Copy only New and Updated files to the Right Directory).");
+				System.out.println("i : Mirror (Create a mirror backup of the Left Directory by adapting the Right Directory to match).");
 				System.out.println("z : Exit");
 				System.out.println("------------------------- DIRECTORY SCAN OPTIONS -------------------------");
 				System.out.println("");
@@ -214,22 +225,31 @@ public class Automator {
 				folderOption = scanner.nextLine();
 				switch (folderOption) {
 				case "a":
-					directorySynchronizer.showDirectoriesDifferenceReport();
+					directorySynchronizer.setPrintFileSynchronizationTag(true);
 					break;
 				case "b":
-					directorySynchronizer.showLeftDirectoryMissingFoldersFilesReport();
+					directorySynchronizer.setPrintFileSynchronizationTag(false);
 					break;
 				case "c":
-					directorySynchronizer.showLeftDirectoryNewFoldersFilesReport();
+					directorySynchronizer.showDirectoriesDifferenceReport();
 					break;
 				case "d":
-					directorySynchronizer.showLeftDirectoryModifiedFoldersFilesReport();
+					directorySynchronizer.showLeftDirectoryMissingFoldersFilesReport();
 					break;
 				case "e":
-					directorySynchronizer.showSourceDirectoryUnModifiedFoldersFilesReport();
+					directorySynchronizer.showLeftDirectoryNewFoldersFilesReport();
 					break;
 				case "f":
+					directorySynchronizer.showLeftDirectoryModifiedFoldersFilesReport();
+					break;
+				case "g":
+					directorySynchronizer.showSourceDirectoryUnModifiedFoldersFilesReport();
+					break;
+				case "h":
 					directorySynchronizer.updateRightDirectory();
+					break;
+				case "i":
+					directorySynchronizer.mirrorRightDirectoryWithLeft();
 					break;
 				default:
 					if (!"z".equals(folderOption)) {
