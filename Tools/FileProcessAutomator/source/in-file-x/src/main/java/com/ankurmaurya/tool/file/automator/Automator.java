@@ -149,12 +149,12 @@ public class Automator {
 		String printFileSynchTag = scanner.nextLine();
 		try {
 			boolean confirmFileEqualityByHashing = false;
-			if (cnfrmFileEqualByHash.equalsIgnoreCase("y")) {
+			if (cnfrmFileEqualByHash.equalsIgnoreCase("Y")) {
 				confirmFileEqualityByHashing = true;
 			}
 			
 			boolean printFileSynchronizationTag = false;
-			if (printFileSynchTag.equalsIgnoreCase("y")) {
+			if (printFileSynchTag.equalsIgnoreCase("Y")) {
 				printFileSynchronizationTag = true;
 			}
 

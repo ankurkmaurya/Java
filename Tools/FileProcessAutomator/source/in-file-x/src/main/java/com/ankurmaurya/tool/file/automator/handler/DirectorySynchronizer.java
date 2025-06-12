@@ -341,29 +341,24 @@ public class DirectorySynchronizer {
 					if (!rightFile.exists()) {
 						System.out.print("+");
 						fileDetail.setFileAttribute(FileAttribute.NEW);
-						continue;
-					}
-
-					if (leftFile.length() != rightFile.length()) {
+					} else if (leftFile.length() != rightFile.length()) {
 						System.out.print("*");
 						fileDetail.setFileAttribute(FileAttribute.MODIFIED);
-						continue;
-					}
-					
-		
-					boolean filesAreEqual;
-					if(confirmFileEqualityByHashing) {
-						//Check if the two files are equal by file data Hash
-						filesAreEqual = isTwoFilesAreEqual(leftFile, rightFile);
 					} else {
-						//Check if the two files ends are equal
-						filesAreEqual = isTwoFilesEndBytesAreEqual(leftFile, rightFile);
-					}
-					if (filesAreEqual) {
-						System.out.print("=");
-					} else {
-						System.out.print("*");
-						fileDetail.setFileAttribute(FileAttribute.MODIFIED);
+						boolean filesAreEqual;
+						if(confirmFileEqualityByHashing) {
+							//Check if the two files are equal by file data Hash
+							filesAreEqual = isTwoFilesAreEqual(leftFile, rightFile);
+						} else {
+							//Check if the two files ends are equal
+							filesAreEqual = isTwoFilesEndBytesAreEqual(leftFile, rightFile);
+						}
+						if (filesAreEqual) {
+							System.out.print("=");
+						} else {
+							System.out.print("*");
+							fileDetail.setFileAttribute(FileAttribute.MODIFIED);
+						}
 					}
 
 					folderDetail.getFileDetails().add(fileDetail);
