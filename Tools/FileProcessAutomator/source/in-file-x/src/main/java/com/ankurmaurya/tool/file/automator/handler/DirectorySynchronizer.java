@@ -14,6 +14,7 @@ import java.util.Set;
 
 import com.ankurmaurya.tool.file.automator.dto.FileAttribute;
 import com.ankurmaurya.tool.file.automator.dto.FileDetail;
+import com.ankurmaurya.tool.file.automator.dto.FileEqualityCheckType;
 import com.ankurmaurya.tool.file.automator.dto.FolderDetail;
 import com.ankurmaurya.tool.file.automator.utils.Utility;
 
@@ -29,6 +30,8 @@ public class DirectorySynchronizer {
 	private Set<String> excludeFiles;
 	private Set<String> excludeFilesWithPattern;
 	
+	private FileEqualityCheckType fileEqualityCheckType;
+	
 	private boolean confirmFileEqualityByHashing;
 	private boolean printFileSynchronizationTag;
 	
@@ -38,7 +41,7 @@ public class DirectorySynchronizer {
 	public DirectorySynchronizer(File leftRootDirectory, File rightRootDirectory, 
 			Set<String> excludeFolders, Set<String> excludeFoldersWithPattern,
 			Set<String> excludeFiles, Set<String> excludeFilesWithPattern,
-			boolean confirmFileEqualityByHashing,
+			FileEqualityCheckType fileEqualityCheckType,
 			boolean printFileSynchronizationTag) {
 		
 		super();	
@@ -346,13 +349,19 @@ public class DirectorySynchronizer {
 						fileDetail.setFileAttribute(FileAttribute.MODIFIED);
 					} else {
 						boolean filesAreEqual;
-						if(confirmFileEqualityByHashing) {
+						if(FileEqualityCheckType.HASHING.equals(fileEqualityCheckType)) {
 							//Check if the two files are equal by file data Hash
-							filesAreEqual = isTwoFilesAreEqual(leftFile, rightFile);
-						} else {
+							filesAreEqual = isTwoFilesHashesAreEqual(leftFile, rightFile);
+						} 
+						else if(FileEqualityCheckType.END_BYTES_BUFFER.equals(fileEqualityCheckType)) {
 							//Check if the two files ends are equal
 							filesAreEqual = isTwoFilesEndBytesAreEqual(leftFile, rightFile);
+						} 
+						else {
+							//Check if the two files are equal by there size (length)
+							filesAreEqual = leftFile.length() == rightFile.length();
 						}
+						
 						if (filesAreEqual) {
 							System.out.print("=");
 						} else {
@@ -494,7 +503,8 @@ public class DirectorySynchronizer {
 		try {
 			byte[] leftFileEndBytes = Utility.getFileEndByteBuffer(leftFile.getPath());
 			byte[] rightFileEndBytes = Utility.getFileEndByteBuffer(rightFile.getPath());
-			bytesAreEqual = Arrays.equals(leftFileEndBytes, rightFileEndBytes);
+			bytesAreEqual = Arrays.equals(leftFileEndBytes, rightFileEndBytes) && 
+					       leftFile.length() == rightFile.length();
 		} catch (Exception e) {
 			System.out.println("Exception isTwoFilesEndBytesAreEqual() :- " + e.toString());
 		}
@@ -503,14 +513,14 @@ public class DirectorySynchronizer {
 	
 	
 	
-	private boolean isTwoFilesAreEqual(File leftFile, File rightFile) {
+	private boolean isTwoFilesHashesAreEqual(File leftFile, File rightFile) {
 		boolean bytesAreEqual = false;
 		try {
 			String leftFileChksum = Utility.generateFileChecksum(leftFile.getPath());
 			String rightFileChksum = Utility.generateFileChecksum(rightFile.getPath());
 			bytesAreEqual = leftFileChksum.equals(rightFileChksum);
 		} catch (Exception e) {
-			System.out.println("Exception isTwoFilesAreEqual() :- " + e.toString());
+			System.out.println("Exception isTwoFilesHashesAreEqual() :- " + e.toString());
 		}
 		return bytesAreEqual;
 	}
@@ -609,11 +619,13 @@ public class DirectorySynchronizer {
 		try (DirectoryStream<Path> stream = Files.newDirectoryStream(parentFolder.toPath())) {
 			int a = 1;
 	        for (Path path : stream) {
-	        	//System.out.println(a);
+	        	System.out.print(a);
 	            if (Files.isDirectory(path)) {
 	            	folderList.add(path.toFile());
+	            	System.out.println(" D");
 	            } else {
 	            	fileList.add(path.toFile());
+	            	System.out.println(" F");
 	            }
 	            a++;
 	        }

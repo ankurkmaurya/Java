@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
+import com.ankurmaurya.tool.file.automator.dto.FileEqualityCheckType;
 import com.ankurmaurya.tool.file.automator.dto.KeywordExtractorMeta;
 import com.ankurmaurya.tool.file.automator.handler.DirectorySynchronizer;
 import com.ankurmaurya.tool.file.automator.handler.FileSearchHandler;
@@ -66,7 +67,7 @@ public class Automator {
 	
 	
 	public static void option1Handler(Scanner scanner) {
-		System.out.println("Please provide source folder where plain/text files exists.");
+		System.out.println("Provide source folder where plain/text files exists.");
 		String srcFolder = scanner.nextLine();
 		System.out.println("Provide No. of keywords to be searched in files. (Value : min - 1, max - 10)");
 		try {
@@ -85,7 +86,7 @@ public class Automator {
 	}
 	
 	public static void option2Handler(Scanner scanner) {
-		System.out.println("Please provide source folder of files to generate Checksum.");
+		System.out.println("Provide source folder of files to generate Checksum.");
 		String srcFolder = scanner.nextLine();
 		try {
 			System.out.println("Generating Checksum for files, Please Wait....");
@@ -97,7 +98,7 @@ public class Automator {
 	}
 	
 	public static void option3Handler(Scanner scanner) {
-		System.out.println("Please provide source folder where plain/text files exists.");
+		System.out.println("Provide source folder where plain/text files exists.");
 		String srcFolder = scanner.nextLine();
 		try {
 			List<KeywordExtractorMeta> keywordExtractorMetas = new ArrayList<>();
@@ -127,30 +128,35 @@ public class Automator {
 	}
 	
 	public static void option4Handler(Scanner scanner) {
-		System.out.println("Please provide Left(source) directory path to be evaluated.");
+		System.out.println("Provide Left(source) directory path to be evaluated.");
 		String leftFolderPath = scanner.nextLine();
-		System.out.println("Please provide Right(destination) directory path whose difference need to be compared with Left directory.");
+		System.out.println("Provide Right(destination) directory path whose difference need to be compared with Left directory.");
 		String rightFolderPath = scanner.nextLine();
 
-		System.out.println("Please provide Folder-Name of any folder that need to be excluded from scanning.");
+		System.out.println("Provide Folder-Name of any folder that need to be excluded from scanning.");
 		System.out.println("Folder-Name with pattern can also be included just provide pattern name including (.*) pattern sequence.");
 		System.out.println("(Values : FolderName1,FolderName2,FolderName3,FolderPattern1.*,.*FolderPattern2,.*FolderPattern3.*)");
 		String excludeFoldersSeq = scanner.nextLine();
 
-		System.out.println("Please provide File-Name of any file that need to be excluded from scanning.");
+		System.out.println("Provide File-Name of any file that need to be excluded from scanning.");
 		System.out.println("File-Name with pattern can also be included just provide pattern name including (.*) pattern sequence.");
 		System.out.println("(Values : FileName1,FileName2,FileName3,FilePattern1.*,.*FilePattern2,.*FilePattern3.*)");
 		String excludeFilesSeq = scanner.nextLine();
 
-		System.out.println("Do you want to confirm, Files are equal by Hashing. (Value : Y[Yes[, N[No])");
-		String cnfrmFileEqualByHash = scanner.nextLine();
+		System.out.println("Select File Equality Check method, Methods are Hashing or End Data Buffer or File Length. (Value : Y[Yes], N[No])");
+		System.out.println("(Values : H[Hashing], EDB[End Data Buffer], FL[File Length]");
+		String fileEqualityCheckMethod = scanner.nextLine(); 
 		
-		System.out.println("Do you want to print File Synchronization Tag while displaying report. (Value : Y[Yes[, N[No])");
+		System.out.println("Do you want to print File Synchronization Tag while displaying report. (Value : Y[Yes], N[No])");
 		String printFileSynchTag = scanner.nextLine();
 		try {
-			boolean confirmFileEqualityByHashing = false;
-			if (cnfrmFileEqualByHash.equalsIgnoreCase("Y")) {
-				confirmFileEqualityByHashing = true;
+			FileEqualityCheckType fileEqualityCheckType;
+			if (fileEqualityCheckMethod.equalsIgnoreCase("H")) {
+				fileEqualityCheckType = FileEqualityCheckType.HASHING;
+			} else if (fileEqualityCheckMethod.equalsIgnoreCase("EDB")) {
+				fileEqualityCheckType = FileEqualityCheckType.END_BYTES_BUFFER;
+			} else {
+				fileEqualityCheckType = FileEqualityCheckType.FILE_LENGTH;
 			}
 			
 			boolean printFileSynchronizationTag = false;
@@ -197,7 +203,7 @@ public class Automator {
 
 			DirectorySynchronizer directorySynchronizer = new DirectorySynchronizer(leftFolder, rightFolder,
 					excludeFolders, excludeFoldersWithPattern, excludeFiles, excludeFilesWithPattern,
-					confirmFileEqualityByHashing, printFileSynchronizationTag);
+					fileEqualityCheckType, printFileSynchronizationTag);
 			directorySynchronizer.scanAndEvaluateDirectoryDifference();
 
 			if (directorySynchronizer.getScannedFolderDetail() == null) {
