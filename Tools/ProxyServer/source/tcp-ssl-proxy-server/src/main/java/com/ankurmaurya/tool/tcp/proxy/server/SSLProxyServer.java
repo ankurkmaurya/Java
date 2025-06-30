@@ -3,6 +3,7 @@ package com.ankurmaurya.tool.tcp.proxy.server;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.nio.file.Files;
 import java.security.KeyStore;
 
 import javax.net.ssl.KeyManager;
@@ -73,20 +74,36 @@ public class SSLProxyServer implements Runnable {
     //Create and initialize the SSLContext
     private static SSLContext createSSLContext() {
         SSLContext sslContext = null;
-        try {	
-        	String keystoreFileName = "certificate\\star.in.pfx";
-        	File keystoreFile = new File(keystoreFileName);
-        	if(!keystoreFile.exists()) {
-        		System.out.println("Keystore File '" + keystoreFile.getPath()+ "' does not found.");
+        try {
+        	File certificateFolder = new File("certificate");
+        	if(!certificateFolder.exists()) {
+        		System.out.println("'certificate' folder does not exists.");
         		return sslContext;
         	}
         	
-        	String keystorePass = "";
+
+        	String keystoreCertificateFileName = "ssl-local.pfx";
+        	File keystoreCertificateFile = new File(certificateFolder, keystoreCertificateFileName);
+        	if(!keystoreCertificateFile.exists()) {
+        		System.out.println("Keystore File '" + keystoreCertificateFile.getPath()+ "' does not found.");
+        		return sslContext;
+        	}
+        	
+        	
+        	String keystoreDataFileName = "ssl-local.dat";
+        	File keystoreDataFile = new File(certificateFolder, keystoreDataFileName);
+        	if(!keystoreDataFile.exists()) {
+        		System.out.println("Keystore Data File '" + keystoreDataFile.getPath()+ "' does not found.");
+        		return sslContext;
+        	}
+        	String dataLine0 = Files.readAllLines(keystoreDataFile.toPath()).get(0);
+        	String keystorePass = dataLine0;
         	if(keystorePass == null || keystorePass.equals("")) {
-        		keystorePass = "";
+        		System.out.println("Keystore Password not found.");
+        		return sslContext;
         	}
 
-            try (FileInputStream fis = new FileInputStream(keystoreFile)) {
+            try (FileInputStream fis = new FileInputStream(keystoreCertificateFile)) {
                 KeyStore keyStore = KeyStore.getInstance("PKCS12");
                 keyStore.load(fis, keystorePass.toCharArray());
 
@@ -104,7 +121,6 @@ public class SSLProxyServer implements Runnable {
                 sslContext = SSLContext.getInstance("TLSv1.2");
                 sslContext.init(km, tm, null);
             }
-
         } catch (Exception ex) {
         	 System.out.println("Exception createSSLContext() : " + ex.toString());
         }

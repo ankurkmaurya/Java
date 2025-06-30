@@ -1,10 +1,12 @@
 
 package com.ankurmaurya.tool.tcp.proxy.server;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.security.KeyStore;
 
 import javax.net.ssl.KeyManager;
@@ -108,34 +110,60 @@ public class ForwardServer implements Runnable {
 		System.out.println(" -> " + serverID + " Traffic Forwarding  " + mClientHostPort + " <--> " + mServerHostPort + "  stopped.");
 	}
 	
-	// Create and initialize the SSLContext and then SSLSocketFactory
+	
 	private SSLSocketFactory getSSLSocketFactory() {
+		SSLSocketFactory sslSocketFactory = null;
 		// Creating Secure Socket factory
 		try {
-			String keystoreFileName = "certificate\\star.in.pfx";
+			File certificateFolder = new File("certificate");
+			if (!certificateFolder.exists()) {
+				System.out.println("'certificate' folder does not exists.");
+				return sslSocketFactory;
+			}
 
-			KeyStore keyStore = KeyStore.getInstance("PKCS12");
-			keyStore.load(new FileInputStream(keystoreFileName), "".toCharArray());
+			String keystoreCertificateFileName = "ssl-remote.pfx";
+			File keystoreCertificateFile = new File(certificateFolder, keystoreCertificateFileName);
+			if (!keystoreCertificateFile.exists()) {
+				System.out.println("Keystore File '" + keystoreCertificateFile.getPath() + "' does not found.");
+				return sslSocketFactory;
+			}
 
-			// Create key manager
-			KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
-			keyManagerFactory.init(keyStore, "".toCharArray());
-			KeyManager[] km = keyManagerFactory.getKeyManagers();
+			String keystoreDataFileName = "ssl-remote.dat";
+			File keystoreDataFile = new File(certificateFolder, keystoreDataFileName);
+			if (!keystoreDataFile.exists()) {
+				System.out.println("Keystore Data File '" + keystoreDataFile.getPath() + "' does not found.");
+				return sslSocketFactory;
+			}
+			String dataLine0 = Files.readAllLines(keystoreDataFile.toPath()).get(0);
+			String keystorePass = dataLine0;
+			if (keystorePass == null || keystorePass.equals("")) {
+				System.out.println("Keystore Password not found.");
+				return sslSocketFactory;
+			}
 
-			// Create trust manager
-			TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("SunX509");
-			trustManagerFactory.init(keyStore);
-			TrustManager[] tm = trustManagerFactory.getTrustManagers();
+			try (FileInputStream fis = new FileInputStream(keystoreCertificateFile)) {
+				KeyStore keyStore = KeyStore.getInstance("PKCS12");
+				keyStore.load(fis, keystorePass.toCharArray());
 
-			// Initialize SSLContext
-			SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
-			sslContext.init(km, tm, null);
+				// Create key manager
+				KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
+				keyManagerFactory.init(keyStore, keystorePass.toCharArray());
+				KeyManager[] km = keyManagerFactory.getKeyManagers();
 
-			return sslContext.getSocketFactory(); // Create socket factory
+				// Create trust manager
+				TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("SunX509");
+				trustManagerFactory.init(keyStore);
+				TrustManager[] tm = trustManagerFactory.getTrustManagers();
+
+				// Initialize SSLContext
+				SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+				sslContext.init(km, tm, null);
+				sslSocketFactory = sslContext.getSocketFactory();
+			}
 		} catch (Exception ex) {
 			System.out.println("Exception getSSLSocketFactory() : " + ex.toString());
 		}
-		return null;
+		return sslSocketFactory;
 	}
 	
 	
