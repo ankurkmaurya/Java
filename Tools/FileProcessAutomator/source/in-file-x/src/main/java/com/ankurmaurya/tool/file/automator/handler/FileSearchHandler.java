@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 
 import com.ankurmaurya.tool.file.automator.dto.KeywordExtractorMeta;
 import com.ankurmaurya.tool.file.automator.dto.KeywordExtractorMetaTabular;
+import com.ankurmaurya.tool.file.automator.dto.SearchConfigurations;
+import com.ankurmaurya.tool.file.automator.utils.Constants;
 import com.ankurmaurya.tool.file.automator.utils.Utility;
 
 public class FileSearchHandler {
@@ -59,12 +61,13 @@ public class FileSearchHandler {
 	
 	
 	
-	public static void extractKeywordsValueInFiles(String srcFolder, List<KeywordExtractorMeta> keywordExtractorMetas) {
+	public static void extractKeywordsValueInFiles(String srcFolder, SearchConfigurations searchConfigurations) {
 		try {
 			File searchFolder = new File(srcFolder);
 			File searchReport = new File(searchFolder, "Extracted_Report.csv");
 			File[] searchFiles = searchFolder.listFiles();
 			
+			List<KeywordExtractorMeta> keywordExtractorMetas = searchConfigurations.getKeywordExtractorMetas();
 			
 			//Save Header Line
 			StringBuilder headerLine = new StringBuilder();
@@ -79,20 +82,39 @@ public class FileSearchHandler {
 				String srchFileName = searchFile.getName();
 				System.out.println("Extracting data from file - " + srchFileName);
 				Map<String, String> extractedKeywordsData = new HashMap<>();
+				
 
 				//Search and Extract Data
 				List<String> fileLines = Utility.getFileAllLine(searchFile.getPath());
+				List<String> searchLines = new ArrayList<>();
+				switch(searchConfigurations.getSearchMode()) {
+					case Constants.SEARCH_MODE_FULL:
+						searchLines = fileLines;
+						break;
+					case Constants.SEARCH_MODE_UPPER:
+					case Constants.SEARCH_MODE_MIDDLE:	
+					case Constants.SEARCH_MODE_LOWER:
+						getPartialSearchArea(searchConfigurations, fileLines, searchLines);
+						break;
+					default :
+						searchLines = fileLines;
+						break;
+				}
+				
 				for(KeywordExtractorMeta keywordExtractorMeta : keywordExtractorMetas) {
 					System.out.print("Searching Keyword - " + keywordExtractorMeta.getKeyword());
-					String extractedData = extractKeywordValues(keywordExtractorMeta, fileLines);
+					String extractedData = extractKeywordValues(keywordExtractorMeta, searchLines);
 					extractedKeywordsData.put(keywordExtractorMeta.getHeaderName(), extractedData);
 					System.out.println(" Value - " + extractedData);
 				}
 				
-				
 				//Save Extracted Data
+				String srchedFileName = searchConfigurations.getOutputRemoveStringInFileName() == null 
+						? srchFileName 
+						: srchFileName.replace(searchConfigurations.getOutputRemoveStringInFileName(), "");
+				
 				StringBuilder dataLine = new StringBuilder();
-				dataLine.append(srchFileName).append(",");
+				dataLine.append(srchedFileName).append(",");
 				dataLine.append(keywordExtractorMetas.stream().map(e-> extractedKeywordsData.get(e.getHeaderName())).collect(Collectors.joining(",")));
 				Utility.saveFileAllLine(List.of(dataLine.toString()), searchReport.getPath(), true);
 				
@@ -278,8 +300,58 @@ public class FileSearchHandler {
 		return extractedDataSB.toString();
 	}
 	
+	
+	private static void getPartialSearchArea(SearchConfigurations searchConfigurations, List<String> fileLines, List<String> searchLines) {
+		int searchKeyFoundIndex = -1;
+		for (int l = 0; l < fileLines.size(); l++) {
+			String searchLine = fileLines.get(l);
+			if (searchLine.contains(searchConfigurations.getSearchTargetKeyword())) {
+				searchKeyFoundIndex = l;
+				break;
+			}
+		}
 
+		if (searchKeyFoundIndex > -1) {
+			int srchAreaUpperLimit = 0;
+			int srchAreaLowerLimit = 0;
+			switch (searchConfigurations.getSearchMode()) {
+				case Constants.SEARCH_MODE_UPPER:
+					srchAreaUpperLimit = 0;
+					srchAreaLowerLimit = searchKeyFoundIndex;
+					break;
+				case Constants.SEARCH_MODE_MIDDLE:
+					String upperBoundFromTarget = searchConfigurations.getSearchAreaUpperBoundLinesFromTarget();
+					String lowerBoundFromTarget = searchConfigurations.getSearchAreaLowerBoundLinesFromTarget();
+					if (upperBoundFromTarget != null && lowerBoundFromTarget != null) {
+						try {
+							srchAreaUpperLimit = (searchKeyFoundIndex - Integer.parseInt(upperBoundFromTarget));
+							srchAreaLowerLimit = (searchKeyFoundIndex + Integer.parseInt(lowerBoundFromTarget));
+						} catch (NumberFormatException nfe) {
+							System.out.println("Exception getSearchAreaForMiddleMode() : " + nfe.toString());
+						}
+					}
+					break;
+				case Constants.SEARCH_MODE_LOWER:
+					srchAreaUpperLimit = searchKeyFoundIndex;
+					srchAreaLowerLimit = fileLines.size();
+					break;
+				default:
+					searchLines = fileLines;
+					break;
+			}
+
+			//Extract the Search Area Contents
+			for (int s = srchAreaUpperLimit; s < srchAreaLowerLimit; s++) {
+				searchLines.add(fileLines.get(s));
+			}
+		}
+	}
+	
 	
 }
+
+
+
+
 
 

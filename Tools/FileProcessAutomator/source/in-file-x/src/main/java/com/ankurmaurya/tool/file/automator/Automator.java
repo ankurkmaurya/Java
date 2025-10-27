@@ -10,12 +10,16 @@ import java.util.Set;
 
 import com.ankurmaurya.tool.file.automator.dto.FileEqualityCheckType;
 import com.ankurmaurya.tool.file.automator.dto.KeywordExtractorMeta;
+import com.ankurmaurya.tool.file.automator.dto.SearchConfigurations;
 import com.ankurmaurya.tool.file.automator.handler.DirectorySynchronizer;
 import com.ankurmaurya.tool.file.automator.handler.FileSearchHandler;
 import com.ankurmaurya.tool.file.automator.handler.HashValueGenerator;
+import com.ankurmaurya.tool.file.automator.utils.Constants;
 import com.ankurmaurya.tool.file.automator.utils.Utility;
 
 public class Automator {
+	
+	
 
 	
 	public static void main(String[] args) {
@@ -85,6 +89,7 @@ public class Automator {
 		}
 	}
 	
+	
 	public static void option2Handler(Scanner scanner) {
 		System.out.println("Provide source folder of files to generate Checksum.");
 		String srcFolder = scanner.nextLine();
@@ -97,20 +102,44 @@ public class Automator {
 		}
 	}
 	
+	
 	public static void option3Handler(Scanner scanner) {
 		System.out.println("Provide source folder where plain/text files exists.");
 		String srcFolder = scanner.nextLine();
 		try {
+			SearchConfigurations searchConfigurations = new SearchConfigurations();
 			List<KeywordExtractorMeta> keywordExtractorMetas = new ArrayList<>();
-			//Skip keyword Meta Input File first line
-			List<String> keywordInputLines = Utility.getFileAllLine(new File ("./Input/keywords-metadata.txt").getPath()).stream().skip(1).toList();
-			System.out.println("Keyword Extractor Metas Raw Found - " + keywordInputLines.size());
-			for(String keywordInputLine : keywordInputLines) {
-				if(!keywordInputLine.contains("~")) {
+			
+			//Skip the Commented Lines from Configuration file (Lines starting with character #)
+			List<String> searchConfigurationLines = Utility.getFileAllLine(new File ("./Input/keywords-metadata.txt").getPath()).stream()
+					.filter(e->e.length()>0 && !e.substring(0, 1).equals("#")).toList();
+			System.out.println("Search Configuration Raw Lines Found - " + searchConfigurationLines.size());
+			for(String searchConfigurationLine : searchConfigurationLines) {
+				if(!searchConfigurationLine.contains("~")) {
+					if(searchConfigurationLine.contains(Constants.SEARCH_CONF_SEARCH_MODE)) {
+						searchConfigurations.setSearchMode(
+								searchConfigurationLine.replace(Constants.SEARCH_CONF_SEARCH_MODE, "").trim());
+					}
+					else if(searchConfigurationLine.contains(Constants.SEARCH_CONF_SEARCH_TARGET_KEYWORD)) {
+						searchConfigurations.setSearchTargetKeyword(
+								searchConfigurationLine.replace(Constants.SEARCH_CONF_SEARCH_TARGET_KEYWORD, "").trim());
+					}
+					else if(searchConfigurationLine.contains(Constants.SEARCH_CONF_SEARCH_AREA_UPPER_BOUND_LINES_FROM_TARGET)) {
+						searchConfigurations.setSearchAreaUpperBoundLinesFromTarget(
+								searchConfigurationLine.replace(Constants.SEARCH_CONF_SEARCH_AREA_UPPER_BOUND_LINES_FROM_TARGET, "").trim());
+					}
+					else if(searchConfigurationLine.contains(Constants.SEARCH_CONF_SEARCH_AREA_LOWER_BOUND_LINES_FROM_TARGET)) {
+						searchConfigurations.setSearchAreaLowerBoundLinesFromTarget(
+								searchConfigurationLine.replace(Constants.SEARCH_CONF_SEARCH_AREA_LOWER_BOUND_LINES_FROM_TARGET, "").trim());
+					}
+					else if(searchConfigurationLine.contains(Constants.SEARCH_CONF_OUTPUT_REMOVE_STRING_IN_FILE_NAME)) {
+						searchConfigurations.setOutputRemoveStringInFileName(
+								searchConfigurationLine.replace(Constants.SEARCH_CONF_OUTPUT_REMOVE_STRING_IN_FILE_NAME, "").trim());
+					}
 					continue;
 				}
 				
-				String[] keywordInputLineSplt = keywordInputLine.split("~");
+				String[] keywordInputLineSplt = searchConfigurationLine.split("~");
 				KeywordExtractorMeta keywordExtractorMeta = new KeywordExtractorMeta(keywordInputLineSplt[0], 
 						keywordInputLineSplt[1], 
 						keywordInputLineSplt[2], 
@@ -119,8 +148,10 @@ public class Automator {
 				keywordExtractorMetas.add(keywordExtractorMeta);
 			}
 			System.out.println("Keyword Extractor Metas Build - " + keywordExtractorMetas.size());
+			searchConfigurations.setKeywordExtractorMetas(keywordExtractorMetas);
+
 			System.out.println("Searching Keywords in files, Please Wait....");
-			FileSearchHandler.extractKeywordsValueInFiles(srcFolder, keywordExtractorMetas);
+			FileSearchHandler.extractKeywordsValueInFiles(srcFolder, searchConfigurations);
 			System.out.println("Searching Keywords Completed.");
 		} catch (Exception e) {
 			System.out.println("Exception option3Handler() : " + e.toString());
@@ -271,11 +302,8 @@ public class Automator {
 	}
 	
 	
-	
-	
-	
-	
-	
-	
 
 }
+
+
+

@@ -1,17 +1,31 @@
-#Keyword~SearchDirection[V/H(LineSkip)/T(LineSkip)]~HeaderName~Occurence[S/M]
-Username:~V~User Name~M
-CsName         :~V~System Name~S
-OsName         :~V~OS Name~S
-OsVersion      :~V~OS Version~S
-OsArchitecture :~V~OS Architecture~S
-CsDomain       :~V~Domain~S
-CsModel        :~V~Model~S
-CsManufacturer :~V~Manufacturer~S
-Name                      :~V~CPU Name~S
-Manufacturer              :~V~CPU Manufacturer~S
-NumberOfCores             :~V~No. of Cores~S
-NumberOfLogicalProcessors :~V~No. of Logical Processors~S
-MaxClockSpeed             :~V~Max. Clock Speed~S
-SerialNumber :~V~Serial Number~S
-Model---Size (GB)~T1~Disk Space Information~M
-Name---MacAddress~T1~MacAddress~M
+
+#- Search.Mode:
+# Values - 1. Full   (Search the keywords in entire file)
+#          2. Upper  (Limit the Search Area and Search the keywords from start of the file till the search target found position)
+#          3. Middle (Limit the Search Area and Search the keywords between the upper and lower bound of the search target found position)
+#          4. Lower  (Limit the Search Area and Search the keywords from the search target found position to the end of the file)
+Search.Mode=Middle
+Search.Target.Keyword=Version=94.09
+Search.Area.Upper.Bound.Lines.From.Target=10
+Search.Area.Lower.Bound.Lines.From.Target=10
+Output.Remove.String.In.File.Name=_Activity.log
+
+
+#-------- KEYWORDS TO BE SEARCHED -------------------
+#For e.g - Keyword~SearchDirection[V/HX/TX]~HeaderName~Occurence[S/M]
+# 
+#- Keyword: String to be searched and whose value need to be extracted.
+# 
+#- SearchDirection:
+# V - Vertical
+# H - Horizontal (X means Number of Lines Count to be Skipped)
+# T - Tabular (X means Number of Lines Count to be Skipped)
+# 
+#- Occurence:
+# S - Single
+# M - Multiple
+# 
+Name=~V~Name~S
+Version=~V~Version~S
+Status=~V~Status~S
+
