@@ -127,7 +127,7 @@ public class FileSearchHandler {
 	
 	
 	private static String extractKeywordValues(KeywordExtractorMeta keywordExtractorMeta, List<String> fileLines) {
-		int lineSkip = 1;
+		int lineSkip = 0;
 		String keywordSearchDirection = keywordExtractorMeta.getSearchDirection();
 		if(keywordSearchDirection.contains("H") || keywordSearchDirection.contains("h")) {
 			String lineSkipStr = keywordSearchDirection.toLowerCase().replace("h", "");
@@ -215,11 +215,9 @@ public class FileSearchHandler {
 		//Find the point of keyword occurence and extract the tabular data below
 		for(int i=0; i<fileLines.size(); i++) {
 			String fileLine = fileLines.get(i);
-			
 			if(fileLine.length() == 0 && !tblHdrFound) {
 				continue;
 			}
-			
 			
 			/*
 			 * 
@@ -269,10 +267,12 @@ public class FileSearchHandler {
 					keywordExtractorMetaTabulars.clear();
 					continue;
 				}
-				char[] fileLineChars = fileLine.toCharArray();
-				
 				for(KeywordExtractorMetaTabular keywordExtractorMetaTabular : keywordExtractorMetaTabulars) {
-					String keyValue = new String(Arrays.copyOfRange(fileLineChars, keywordExtractorMetaTabular.getStartIndex(), keywordExtractorMetaTabular.getEndIndex()+1));
+					String keywordAfterValue = fileLine.substring(keywordExtractorMetaTabular.getEndIndex()).trim();
+					String[] keywordAfterValueSplt = keywordAfterValue.split("\\s+");
+					String keyValue = keywordAfterValueSplt.length>0 ? keywordAfterValueSplt[0] : "";
+					keyValue = keyValue.replace(",", "");
+					keyValue = keyValue.replace(":", "");
 					keywordExtractorMetaTabular.setKeywordValue(keyValue);
 					
 					extractedDataSB.append(keywordExtractorMetaTabular.getKeywordTblHdr().trim())

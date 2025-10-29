@@ -25,10 +25,19 @@ Output.Remove.String.In.File.Name=_Activity.log
 # S - Single
 # M - Multiple
 # 
-Name=~V~Name~S
-Version=~V~Version~S
-Status=~V~Status~S
-File:---Line:~T~File~S
-Details :~V~Details~S
-
-
+Username:~V~User Name~M
+CsName         :~V~System Name~S
+OsName         :~V~OS Name~S
+OsVersion      :~V~OS Version~S
+OsArchitecture :~V~OS Architecture~S
+CsDomain       :~V~Domain~S
+CsModel        :~V~Model~S
+CsManufacturer :~V~Manufacturer~S
+Name                      :~V~CPU Name~S
+Manufacturer              :~V~CPU Manufacturer~S
+NumberOfCores             :~V~No. of Cores~S
+NumberOfLogicalProcessors :~V~No. of Logical Processors~S
+MaxClockSpeed             :~V~Max. Clock Speed~S
+SerialNumber :~V~Serial Number~S
+Model---Size (GB)~T1~Disk Space Information~M
+Name---MacAddress~T1~MacAddress~M
